@@ -2,197 +2,187 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Compass, Zap, ArrowRight, Sparkles, CheckCircle2, ShieldAlert } from "lucide-react";
+import { Zap, ArrowRight, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
-interface MapNode {
+interface CareerPathHighlight {
   id: string;
-  category: "interest" | "career" | "skill";
-  title: string;
+  sparkLabel: string;
+  sparkIcon: string;
   discipline: string;
-  summary: string;
-  slug?: string;
-  connectedSkills?: string[];
-  trialTime?: string;
+  careerTitle: string;
+  tagline: string;
+  slug: string;
+  dayInTheLifeSnippet: string;
+  essentialSkills: string[];
+  trialName: string;
+  trialMinutes: number;
 }
 
-const NODES_DATA: MapNode[] = [
+const CAREER_PATHWAYS: CareerPathHighlight[] = [
   {
-    id: "interest-systems",
-    category: "interest",
-    title: "How Complex Systems Work",
+    id: "tech",
+    sparkLabel: "Building Systems & Code",
+    sparkIcon: "⚙️",
     discipline: "Engineering",
-    summary: "Curiosity about databases, networked services, APIs, and resilient infrastructure.",
-  },
-  {
-    id: "interest-empathy",
-    category: "interest",
-    title: "Human Behavior & Interaction",
-    discipline: "Design & Humanities",
-    summary: "Fascinated by how visual affordances, psychology, and layout affect user choices.",
-  },
-  {
-    id: "interest-markets",
-    category: "interest",
-    title: "Capital, Margins & Strategy",
-    discipline: "Commerce",
-    summary: "Driven by unit economics, valuation modeling, cash flows, and resource allocation.",
-  },
-  {
-    id: "career-fullstack",
-    category: "career",
-    title: "Full-Stack Web & Systems Engineer",
-    discipline: "Engineering",
-    summary: "Architects responsive apps and robust database backends.",
+    careerTitle: "Full-Stack Systems Engineer",
+    tagline: "Architect and build reliable digital services from database schemas to interactive client interfaces.",
     slug: "full-stack-systems-engineer",
-    connectedSkills: ["TypeScript / React", "SQL & Relational Modeling", "Git Collaboration"],
-    trialTime: "15 min trial",
+    dayInTheLifeSnippet: "Design database migrations, write performant API endpoints, and eliminate latency bottlenecks.",
+    essentialSkills: ["SQL & Relational Modeling", "TypeScript & React", "Git Collaboration"],
+    trialName: "Database Bottleneck & Optimistic UI Debugging",
+    trialMinutes: 15,
   },
   {
-    id: "career-ux",
-    category: "career",
-    title: "Digital Product & UX Designer",
-    discipline: "Design",
-    summary: "Bridges user friction and software through prototyping and accessibility audits.",
+    id: "design",
+    sparkLabel: "Human Experience & UX",
+    sparkIcon: "🎨",
+    discipline: "Design & Arts",
+    careerTitle: "Digital Product & UX Designer",
+    tagline: "Bridge human needs and digital systems through user research, wireframing, and accessible design.",
     slug: "product-ux-designer",
-    connectedSkills: ["User Research", "UI Prototyping", "Visual Hierarchy"],
-    trialTime: "12 min trial",
+    dayInTheLifeSnippet: "Conduct usability tests on proposed workflows and design WCAG AA accessible interface prototypes in Figma.",
+    essentialSkills: ["User Research", "UI Prototyping", "Visual Hierarchy"],
+    trialName: "Hospital Patient Check-In Usability Audit",
+    trialMinutes: 12,
   },
   {
-    id: "career-finance",
-    category: "career",
-    title: "Financial Analyst & Valuation Associate",
-    discipline: "Commerce",
-    summary: "Models corporate cash flows, margin sensitivity, and valuation scenarios.",
+    id: "finance",
+    sparkLabel: "Capital, Margins & Strategy",
+    sparkIcon: "📈",
+    discipline: "Commerce & Business",
+    careerTitle: "Financial Analyst & Valuation Associate",
+    tagline: "Turn company performance data, financial filings, and market dynamics into capital decisions.",
     slug: "financial-analyst",
-    connectedSkills: ["Financial Modeling", "Corporate Accounting", "Quantitative Fluency"],
-    trialTime: "15 min trial",
+    dayInTheLifeSnippet: "Build dynamic 3-statement forecast models, conduct sensitivity analyses, and write crisp investment memos.",
+    essentialSkills: ["Financial Modeling", "Corporate Accounting", "Quantitative Fluency"],
+    trialName: "Retail Margin Compression & Sensitivity Model",
+    trialMinutes: 15,
+  },
+  {
+    id: "policy",
+    sparkLabel: "Civic Policy & Law",
+    sparkIcon: "⚖️",
+    discipline: "Law & Public Service",
+    careerTitle: "Public Policy & Governance Analyst",
+    tagline: "Evaluate societal challenges, analyze legal frameworks, and design evidence-backed public programs.",
+    slug: "public-policy-analyst",
+    dayInTheLifeSnippet: "Synthesize legislative precedent, dissect government datasets, and draft actionable policy briefs for ministries.",
+    essentialSkills: ["Policy Analysis", "Structured Written Communication", "Critical Reasoning"],
+    trialName: "Electric Bus Subsidy Stakeholder Conflict",
+    trialMinutes: 12,
   },
 ];
 
 export function InteractiveCareerMap() {
-  const [selectedNodeId, setSelectedNodeId] = useState<string>("career-fullstack");
+  const [activePathwayId, setActivePathwayId] = useState<string>("tech");
 
-  const selectedNode = NODES_DATA.find((n) => n.id === selectedNodeId) || NODES_DATA[3];
+  const currentPath = CAREER_PATHWAYS.find((p) => p.id === activePathwayId) || CAREER_PATHWAYS[0];
 
   return (
-    <div className="w-full rounded-2xl bg-surface-card border border-border-subtle p-6 lg:p-8 shadow-card overflow-hidden relative">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-border-subtle/80 gap-3">
+    <div className="w-full rounded-2xl bg-surface-card border border-border-subtle p-5 sm:p-7 shadow-card overflow-hidden">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-border-subtle gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-brand animate-pulse" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-brand">
-              Interactive Path Discovery Graph
+            <Sparkles className="w-4 h-4 text-amber-brand" />
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-brand font-display">
+              Interactive Path Discovery
             </span>
           </div>
-          <h3 className="text-lg font-bold text-text-primary mt-1 font-display">
-            Explore How Interests Connect to Real Work & Evidence
-          </h3>
+          <p className="text-sm font-semibold text-text-primary mt-0.5">
+            Tap a curiosity spark to see where it leads:
+          </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-text-muted bg-surface-secondary px-3 py-1.5 rounded-lg border border-border-subtle">
-          <ShieldAlert className="w-3.5 h-3.5 text-amber-brand shrink-0" />
-          <span>Exploratory hypotheses, not deterministic predictions</span>
+        <div className="text-[11px] text-text-muted flex items-center gap-1.5 bg-surface-secondary px-2.5 py-1 rounded-lg border border-border-subtle shrink-0">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-brand shrink-0" />
+          <span>Exploratory paths, not rigid destiny</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6 items-start">
-        {/* Visual Node Graph Selector */}
-        <div className="lg:col-span-7 space-y-4">
-          <p className="text-xs text-text-muted font-medium uppercase tracking-wider">
-            Step 1: Select an interest or career path to trace its relationships
-          </p>
+      {/* 4 Clean Curiosity Sparks */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-5">
+        {CAREER_PATHWAYS.map((path) => {
+          const isSelected = path.id === activePathwayId;
+          return (
+            <button
+              key={path.id}
+              onClick={() => setActivePathwayId(path.id)}
+              className={`p-3 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between ${
+                isSelected
+                  ? "bg-amber-brand/10 border-amber-brand text-text-primary font-semibold shadow-sm"
+                  : "bg-surface-secondary/70 border-border-subtle text-text-muted hover:border-border-medium hover:text-text-primary"
+              }`}
+            >
+              <span className="text-xl mb-1">{path.sparkIcon}</span>
+              <span className="text-xs font-bold leading-tight font-display">{path.sparkLabel}</span>
+              <span className="text-[10px] text-text-muted mt-1">{path.discipline}</span>
+            </button>
+          );
+        })}
+      </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {NODES_DATA.map((node) => {
-              const isSelected = node.id === selectedNodeId;
-              return (
-                <button
-                  key={node.id}
-                  onClick={() => setSelectedNodeId(node.id)}
-                  className={`text-left p-4 rounded-xl border transition-all duration-200 ${
-                    isSelected
-                      ? "bg-amber-brand/10 border-amber-brand/60 shadow-amber-subtle translate-x-1"
-                      : "bg-surface-secondary/70 border-border-subtle hover:border-border-medium hover:bg-surface-interactive/60"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant={node.category === "interest" ? "neutral" : "amber"}>
-                      {node.category === "interest" ? "Starting Spark" : "Career Path"}
-                    </Badge>
-                    <span className="text-[11px] text-text-muted">{node.discipline}</span>
-                  </div>
-                  <h4 className="font-semibold text-sm text-text-primary leading-tight font-display">
-                    {node.title}
-                  </h4>
-                  <p className="text-xs text-text-muted mt-1.5 line-clamp-2 leading-relaxed">
-                    {node.summary}
-                  </p>
-                </button>
-              );
-            })}
+      {/* Pathway Reveal Card */}
+      <div className="mt-5 p-5 sm:p-6 rounded-xl bg-surface-secondary/60 border border-border-subtle space-y-4 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <Badge variant="amber" className="mb-1">{currentPath.discipline}</Badge>
+            <h3 className="text-base sm:text-lg font-bold text-text-primary font-display">
+              {currentPath.careerTitle}
+            </h3>
+          </div>
+          <div className="text-xs font-medium text-amber-brand flex items-center gap-1">
+            <Zap className="w-3.5 h-3.5" />
+            <span>{currentPath.trialMinutes}-min micro-trial available</span>
           </div>
         </div>
 
-        {/* Selected Path Inspector Drawer */}
-        <div className="lg:col-span-5 bg-surface-secondary/80 rounded-xl border border-border-subtle p-5 flex flex-col justify-between min-h-[340px]">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Badge variant="emerald">Live Inspection</Badge>
-              {selectedNode.trialTime && (
-                <span className="text-xs text-amber-brand font-medium flex items-center gap-1">
-                  <Zap className="w-3.5 h-3.5" />
-                  {selectedNode.trialTime}
-                </span>
-              )}
-            </div>
+        <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
+          {currentPath.tagline}
+        </p>
 
-            <div>
-              <h4 className="text-base font-bold text-text-primary font-display">
-                {selectedNode.title}
-              </h4>
-              <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                {selectedNode.summary}
-              </p>
-            </div>
+        {/* Day-in-the-Life snippet */}
+        <div className="p-3 rounded-lg bg-surface-card border border-border-subtle text-xs text-text-muted space-y-1">
+          <span className="font-semibold text-text-primary block">
+            Actual Day-to-Day Work:
+          </span>
+          <p className="leading-relaxed">{currentPath.dayInTheLifeSnippet}</p>
+        </div>
 
-            {selectedNode.connectedSkills && (
-              <div className="space-y-2 pt-2 border-t border-border-subtle/70">
-                <p className="text-xs font-semibold text-text-primary">
-                  Demonstrable Skills Required:
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedNode.connectedSkills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md bg-surface-card border border-border-subtle text-text-primary"
-                    >
-                      <CheckCircle2 className="w-3 h-3 text-emerald-brand shrink-0" />
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="p-3 rounded-lg bg-surface-card border border-border-subtle/80 space-y-1">
-              <p className="text-[11px] font-semibold text-amber-brand uppercase tracking-wider">
-                Aaroh Signature Philosophy
-              </p>
-              <p className="text-xs text-text-muted leading-relaxed">
-                Never pick a career blindly based on a salary rumor. Try the actual daily work in a 12-minute micro-trial first.
-              </p>
-            </div>
+        {/* Essential Skills */}
+        <div className="space-y-1.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+            Skills You Will Demonstrate:
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {currentPath.essentialSkills.map((skill) => (
+              <span
+                key={skill}
+                className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-surface-card border border-border-subtle text-text-primary font-medium"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-brand shrink-0" />
+                <span>{skill}</span>
+              </span>
+            ))}
           </div>
+        </div>
 
-          <div className="pt-4 border-t border-border-subtle/80 flex items-center justify-between gap-3 mt-4">
-            <Link
-              href={selectedNode.slug ? `/trials?career=${selectedNode.slug}` : "/explore"}
-              className="w-full"
-            >
-              <Button size="sm" className="w-full justify-between">
-                <span>{selectedNode.slug ? "Try Micro-Trial First" : "Explore Related Paths"}</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
+        {/* Action Buttons */}
+        <div className="pt-3 border-t border-border-subtle/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs text-text-muted">
+            <strong>Reality Check:</strong> {currentPath.trialName}
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Link href={`/explore`} className="w-1/2 sm:w-auto">
+              <Button variant="outline" size="sm" className="w-full">
+                View Role Details
+              </Button>
+            </Link>
+            <Link href={`/trials?career=${currentPath.slug}`} className="w-1/2 sm:w-auto">
+              <Button variant="primary" size="sm" className="w-full">
+                <span>Try Work ({currentPath.trialMinutes} min)</span>
+                <ArrowRight className="w-3.5 h-3.5 ml-1" />
               </Button>
             </Link>
           </div>
