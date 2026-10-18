@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --canvas: #F8F9FA;
+    --surface-secondary: #F1F3F5;
+    --surface-card: #FFFFFF;
+    --surface-interactive: #E9ECEF;
+    --border-subtle: #DEE2E6;
+    --border-medium: #CED4DA;
+    --text-primary: #181A1D;
+    --text-muted: #5C626A;
+  }
+
+  .dark {
+    --canvas: #101113;
+    --surface-secondary: #15171A;
+    --surface-card: #1B1E22;
+    --surface-interactive: #22262B;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-medium: rgba(255, 255, 255, 0.16);
+    --text-primary: #F8F9FA;
+    --text-muted: #9CA3AF;
+  }
+
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--text-primary);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.4);
+}
+
+/* Restrained transitions */
+button, a, input, select, textarea {
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid #F59E0B;
+  outline-offset: 2px;
+}
