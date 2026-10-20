@@ -23,6 +23,7 @@ import { SKILLS_CATALOG } from "@/lib/skills-data";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { isCareerTrialCompleted } from "@/lib/trials-data";
 import { getDisciplineLabel, getEvidenceStateLabel } from "@/lib/utils";
 
 export default function DashboardPage() {
@@ -37,7 +38,7 @@ export default function DashboardPage() {
   const completedTasks = roadmap?.tasks.filter((t) => t.status === "completed").length || 0;
   const totalTasks = roadmap?.tasks.length || 4;
 
-  const hasCompletedTrial = profile.completedTrialIds.some((id) => id.includes(targetCareer.slug.split("-")[0]));
+  const hasCompletedTrial = isCareerTrialCompleted(profile, targetCareer.slug);
 
   return (
     <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
@@ -91,7 +92,7 @@ export default function DashboardPage() {
           <Badge variant="amber">Recommended Next Step</Badge>
           <span className="text-xs text-text-muted flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 text-amber-brand" />
-            <span>~12–15 mins</span>
+            <span>{!hasCompletedTrial ? "~12–15 mins" : activeTask?.estimatedHours ? `~${activeTask.estimatedHours} hrs` : "~3–4 hrs"}</span>
           </span>
         </div>
 
@@ -99,12 +100,12 @@ export default function DashboardPage() {
           <h2 className="text-base sm:text-lg font-bold font-display text-text-primary leading-snug">
             {!hasCompletedTrial
               ? `Experience the Daily Work: 12-Min Micro-Trial for ${targetCareer.title}`
-              : `Milestone 1: ${activeTask ? activeTask.title : "Review Core Prerequisites"}`}
+              : activeTask ? activeTask.title : primaryRec.recommendedFirstStep}
           </h2>
           <p className="text-xs text-text-muted mt-1 leading-relaxed">
             {!hasCompletedTrial
               ? "Try an actual operational scenario before committing study hours. You will diagnose a realistic challenge and evaluate practical trade-offs."
-              : activeTask?.purpose || "Work on your next milestone deliverable."}
+              : activeTask?.purpose || primaryRec.recommendedFirstStep}
           </p>
         </div>
 
@@ -161,6 +162,13 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {recommendations.slice(0, 2).map((rec) => {
             const isTarget = profile.targetCareerSlug === rec.career.slug;
+            const fitLabel =
+              rec.fitBand === "strong_hypothesis"
+                ? "Strong Fit"
+                : rec.fitBand === "promising_alternative"
+                ? "Alternative"
+                : "Bridge";
+
             return (
               <div
                 key={rec.career.id}
@@ -175,8 +183,8 @@ export default function DashboardPage() {
                     <Badge variant={isTarget ? "amber" : "neutral"}>
                       {isTarget ? "Active Target" : "Alternative Path"}
                     </Badge>
-                    <span className="text-xs font-semibold text-text-muted">
-                      {rec.fitScore}% match
+                    <span className="text-[11px] font-semibold text-text-muted" title={rec.heuristicLimitationsNote}>
+                      {rec.fitScore}/100 • {fitLabel}
                     </span>
                   </div>
 
@@ -187,9 +195,17 @@ export default function DashboardPage() {
                     {rec.career.tagline}
                   </p>
 
-                  <div className="text-[11px] text-text-muted pt-1 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-brand shrink-0" />
-                    <span className="truncate">{rec.matchReasons[0] || "Exploratory fit"}</span>
+                  <div className="space-y-1 pt-1 text-[11px]">
+                    <div className="text-text-muted flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-brand shrink-0" />
+                      <span className="truncate">{rec.matchReasons[0] || "Exploratory fit"}</span>
+                    </div>
+                    {rec.uncertainties[0] && (
+                      <div className="text-text-muted/70 flex items-start gap-1.5 text-[10px]">
+                        <HelpCircle className="w-3 h-3 text-amber-brand/80 shrink-0 mt-0.5" />
+                        <span className="line-clamp-1">{rec.uncertainties[0]}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -270,6 +286,53 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* 5. EVALUATED PROJECT DELIVERABLES & PORTFOLIO */}
+      {profile.projectSubmissions && Object.keys(profile.projectSubmissions).length > 0 && (
+        <div className="p-5 rounded-2xl bg-surface-card border border-border-subtle space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FolderGit2 className="w-4 h-4 text-amber-brand" />
+              <div>
+                <h3 className="text-sm font-bold font-display text-text-primary">
+                  Evaluated Project Deliverables
+                </h3>
+                <span className="text-[10px] text-text-muted">
+                  Student-attested milestones and reflection (external artifacts uninspected)
+                </span>
+              </div>
+            </div>
+            <Link href="/projects" className="text-xs text-amber-brand font-medium hover:underline">
+              Project Studio →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {Object.values(profile.projectSubmissions).map((sub) => (
+              <div
+                key={sub.projectId}
+                className="p-3.5 rounded-xl bg-surface-secondary/70 border border-border-subtle flex items-center justify-between text-xs"
+              >
+                <div className="space-y-0.5 truncate mr-2">
+                  <span className="font-bold text-text-primary block truncate">
+                    {sub.projectSlug}
+                  </span>
+                  <span className="text-[11px] text-text-muted">
+                    {sub.status === "evaluated"
+                      ? `Evaluated • ${sub.overallScore}% Completeness`
+                      : `Needs Revision • ${sub.overallScore}% Completeness`}
+                  </span>
+                </div>
+                <Link href="/projects">
+                  <Badge variant={sub.status === "evaluated" ? "amber" : "neutral"}>
+                    {sub.status === "evaluated" ? "Evaluated" : "Review"}
+                  </Badge>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

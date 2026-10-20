@@ -21,7 +21,7 @@ import { useAarohStore } from "@/lib/store";
 import { SKILLS_CATALOG } from "@/lib/skills-data";
 import { CAREERS_CATALOG } from "@/lib/careers-data";
 import { EvidenceState, Skill } from "@/lib/types";
-import { getEvidenceStateLabel } from "@/lib/utils";
+import { getEvidenceStateLabel, sanitizeExternalUrl } from "@/lib/utils";
 
 export default function SkillIntelligencePage() {
   const { profile, updateSkillEvidence } = useAarohStore();
@@ -84,15 +84,15 @@ export default function SkillIntelligencePage() {
           </Link>
         </div>
 
-        {/* 5 Evidence States Plain-Language Guide */}
+        {/* 6 Evidence States Plain-Language Guide */}
         <div className="p-4 rounded-xl bg-surface-card border border-border-subtle space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-text-muted block">
             How Aaroh Measures Capability (In Plain Language):
           </span>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-[11px]">
             <div className="p-2.5 rounded-lg bg-surface-secondary border border-border-subtle">
               <span className="font-bold text-neutral-400 block mb-0.5">1. Unassessed</span>
-              <p className="text-text-muted leading-tight">Not evaluated yet. Does not mean you lack the skill.</p>
+              <p className="text-text-muted leading-tight">Not evaluated yet. Unexplored ground, not lack of ability.</p>
             </div>
             <div className="p-2.5 rounded-lg bg-surface-secondary border border-border-subtle">
               <span className="font-bold text-purple-400 block mb-0.5">2. Self-Reported</span>
@@ -103,12 +103,16 @@ export default function SkillIntelligencePage() {
               <p className="text-text-muted leading-tight">Completed college syllabus, lab, or structured course.</p>
             </div>
             <div className="p-2.5 rounded-lg bg-surface-secondary border border-border-subtle">
-              <span className="font-bold text-amber-brand block mb-0.5">4. Demonstrated</span>
-              <p className="text-text-muted leading-tight">Built a working project, script, or analysis brief.</p>
+              <span className="font-bold text-amber-brand block mb-0.5">4. Attested Project</span>
+              <p className="text-text-muted leading-tight">Submitted brief with attested milestones (uninspected artifact).</p>
             </div>
             <div className="p-2.5 rounded-lg bg-surface-secondary border border-border-subtle">
-              <span className="font-bold text-emerald-brand block mb-0.5">5. Verified</span>
-              <p className="text-text-muted leading-tight">Peer-reviewed or deployed public artifact.</p>
+              <span className="font-bold text-emerald-400 block mb-0.5">5. Demonstrated</span>
+              <p className="text-text-muted leading-tight">Artifact examined by peer/mentor against rubric criteria.</p>
+            </div>
+            <div className="p-2.5 rounded-lg bg-surface-secondary border border-border-subtle">
+              <span className="font-bold text-teal-400 block mb-0.5">6. Verified</span>
+              <p className="text-text-muted leading-tight">Proctored exam or accredited institutional authority.</p>
             </div>
           </div>
         </div>
@@ -178,10 +182,55 @@ export default function SkillIntelligencePage() {
                     {skill.description}
                   </p>
 
-                  {evidence?.sourceTitle && (
-                    <p className="text-[11px] text-amber-brand font-medium truncate pt-1">
-                      Proof: {evidence.sourceTitle}
-                    </p>
+                  {evidence && evidence.state !== "not_assessed" && evidence.sourceTitle && (
+                    <div className="p-2.5 rounded-lg bg-surface-secondary/70 border border-border-subtle text-[11px] space-y-1 mt-1">
+                      <div className="flex items-center justify-between font-medium">
+                        <span className="text-text-primary truncate font-semibold">
+                          {evidence.sourceTitle}
+                        </span>
+                        {evidence.assessedScore !== undefined && (
+                          <span className="px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-300 font-bold border border-amber-500/30 text-[10px]">
+                            {evidence.assessedScore}% Completeness
+                          </span>
+                        )}
+                      </div>
+                      {evidence.sourceUrl && (() => {
+                        const safeUrl = sanitizeExternalUrl(evidence.sourceUrl);
+                        return safeUrl ? (
+                          <a
+                            href={safeUrl}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="text-amber-brand hover:underline flex items-center gap-1 truncate text-[10px]"
+                          >
+                            <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                            <span>Submitted Link: {safeUrl}</span>
+                          </a>
+                        ) : (
+                          <span className="text-text-muted truncate text-[10px] font-mono">
+                            Link: {evidence.sourceUrl}
+                          </span>
+                        );
+                      })()}
+                      {evidence.reviewerName && (
+                        <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-semibold pt-0.5">
+                          <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                          <span>
+                            {evidence.reviewerRole === "mentor" ? "Mentor" : "Peer"} Examined: {evidence.reviewerName} (Unauthenticated Attestation)
+                          </span>
+                        </div>
+                      )}
+                      {evidence.reflection && (
+                        <p className="text-text-muted italic line-clamp-2 text-[10px] pt-0.5">
+                          &ldquo;{evidence.reflection}&rdquo;
+                        </p>
+                      )}
+                      {evidence.unverifiedNotice && (
+                        <p className="text-[10px] text-amber-400/80 italic pt-0.5">
+                          Notice: {evidence.unverifiedNotice}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -209,7 +258,7 @@ export default function SkillIntelligencePage() {
             isOpen={!!editingSkill}
             onClose={() => setEditingSkill(null)}
             title={`Log Proof: ${editingSkill.name}`}
-            description="Record authentic coursework or practical demonstration. Never fabricate project accomplishments."
+            description="Record authentic coursework, project attestation, or practical demonstration."
             maxWidth="md"
           >
             <div className="space-y-3 text-xs">
@@ -222,10 +271,11 @@ export default function SkillIntelligencePage() {
                   onChange={(e) => setSelectedState(e.target.value as EvidenceState)}
                   className="w-full p-2.5 rounded-xl bg-surface-secondary border border-border-medium text-text-primary text-xs focus:outline-none focus:border-amber-brand"
                 >
-                  <option value="self_reported">Self-Reported (Studied or used independently)</option>
+                  <option value="self_reported">Self-Reported (Studied independently or familiar with basics)</option>
                   <option value="coursework">Coursework (Completed college course or syllabus lab)</option>
-                  <option value="practically_demonstrated">Demonstrated (Built a project or practical deliverable)</option>
-                  <option value="independently_verified">Verified (Reviewed public repo or mentor-verified demo)</option>
+                  <option value="student_attested">Attested Project (Completed project brief with self-attested deliverables)</option>
+                  <option value="practically_demonstrated">Demonstrated (Examined artifact meeting explicit rubric criteria)</option>
+                  <option value="independently_verified">Verified (Proctored exam or accredited institutional authority)</option>
                   <option value="not_assessed">Not Assessed (Reset to unassessed baseline)</option>
                 </select>
               </div>

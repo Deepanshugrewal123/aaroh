@@ -24,6 +24,8 @@ import { Modal } from "@/components/ui/Modal";
 import { useAarohStore } from "@/lib/store";
 import { CAREERS_CATALOG } from "@/lib/careers-data";
 import { SKILLS_CATALOG } from "@/lib/skills-data";
+import { CAREER_TRIALS } from "@/lib/trials-data";
+import { computeCareerRecommendations } from "@/lib/recommendation-engine";
 import { CareerRole } from "@/lib/types";
 import { getDisciplineLabel } from "@/lib/utils";
 
@@ -51,6 +53,8 @@ export default function CareerExplorerPage() {
     }
   };
 
+  const recommendations = computeCareerRecommendations(profile);
+
   const filteredCareers = CAREERS_CATALOG.filter((career) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch =
@@ -60,7 +64,7 @@ export default function CareerExplorerPage() {
       career.skillsRequired.some((s) => SKILLS_CATALOG[s.skillId]?.name.toLowerCase().includes(q));
 
     const matchesDiscipline = selectedDiscipline === "all" || career.discipline === selectedDiscipline;
-    const matchesTrialOnly = !onlyWithTrials || ["product-ux-designer", "financial-analyst", "full-stack-systems-engineer", "public-policy-analyst"].includes(career.slug);
+    const matchesTrialOnly = !onlyWithTrials || CAREER_TRIALS.some((t) => t.careerSlug === career.slug);
 
     return matchesSearch && matchesDiscipline && matchesTrialOnly;
   });
@@ -164,7 +168,8 @@ export default function CareerExplorerPage() {
             const isSaved = profile.savedCareerSlugs.includes(career.slug);
             const isTarget = profile.targetCareerSlug === career.slug;
             const isCompared = comparisonSlugs.includes(career.slug);
-            const hasTrial = ["product-ux-designer", "financial-analyst", "full-stack-systems-engineer", "public-policy-analyst"].includes(career.slug);
+            const hasTrial = CAREER_TRIALS.some((t) => t.careerSlug === career.slug);
+            const rec = recommendations.find((r) => r.career.slug === career.slug);
 
             return (
               <div
@@ -177,9 +182,16 @@ export default function CareerExplorerPage() {
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Badge variant={isTarget ? "amber" : "neutral"}>
-                      {isTarget ? "Target Path" : getDisciplineLabel(career.discipline)}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant={isTarget ? "amber" : "neutral"}>
+                        {isTarget ? "Active Target" : getDisciplineLabel(career.discipline)}
+                      </Badge>
+                      {rec && (
+                        <span className="text-[10px] font-semibold text-text-muted" title={rec.heuristicLimitationsNote}>
+                          {rec.fitScore}/100 • {rec.fitBand === "strong_hypothesis" ? "Strong Fit" : rec.fitBand === "promising_alternative" ? "Alternative" : "Bridge"}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => toggleCompare(career.slug)}

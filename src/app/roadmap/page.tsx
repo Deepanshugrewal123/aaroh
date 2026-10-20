@@ -198,11 +198,20 @@ export default function AdaptiveRoadmapPage() {
 
                       {/* Submitted Evidence */}
                       {task.submittedEvidence && (
-                        <div className="p-2.5 rounded-lg bg-surface-card border border-emerald-500/30 text-xs text-emerald-400 space-y-0.5">
-                          <span className="font-semibold block">Proof of Work Logged:</span>
+                        <div className="p-2.5 rounded-lg bg-surface-card border border-border-medium text-xs space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-amber-brand block">
+                              Evidence Logged ({task.id === "task-3" ? "Student-Attested" : task.id === "task-4" ? "Demonstrated • Artifact Examined (Unauthenticated Reviewer)" : "Verified"}):
+                            </span>
+                          </div>
                           <p className="text-text-primary font-mono text-[11px] truncate">
                             {task.submittedEvidence.urlOrText}
                           </p>
+                          {task.submittedEvidence.notes && (
+                            <p className="text-text-muted text-[10px]">
+                              {task.submittedEvidence.notes}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>

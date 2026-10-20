@@ -244,4 +244,357 @@ export const CAREER_TRIALS: CareerTrial[] = [
     ],
     suggestedNextStep: "Review the Public Policy Whitepaper task in your Adaptive Roadmap.",
   },
+  {
+    id: "trial-clinical-coordination",
+    careerSlug: "clinical-research-coordinator",
+    title: "Micro-Trial: Outpatient Clinic Schedule Disruption & Administrative Triage",
+    discipline: "healthcare",
+    estimatedMinutes: 12,
+    disclaimerNotice: "FICTIONAL SCENARIO NOTICE: All patient profiles, clinic schedules, and staff names are entirely fictional and designed solely for educational exploration of healthcare operations. This trial does NOT teach or evaluate clinical diagnosis, prescribing, or medical triage. Administrative workflow coordination is strictly distinguished from clinical medical licensing.",
+    objective: "Manage a multi-patient outpatient clinic schedule crisis following an emergency surgery delay while maintaining patient safety, transport deadlines, and confidentiality.",
+    scenario: "At Metro Health Oncology Day Care, Dr. Ananya Rao was called into emergency surgery at 8:45 AM and will be delayed by 2.5 hours. Four patients are scheduled in the 9:00 AM–10:30 AM block: Patient A (72, post-chemo follow-up, arrived via ambulance van with fixed 11:30 AM return pickup); Patient B (44, routine 6-month remission checkup, asymptomatic, flexible laptop worker); Patient C (58, post-op day 4 wound review, reports localized redness and heat around drain site, accompanied by anxious daughter); Patient D (36, new intake consultation with 3 folders of external diagnostic biopsy slides requiring 45 mins intake).",
+    instructions: [
+      "Assess clinical acuity vs logistics: Immediate safety concerns (Patient C's potential wound complication) must be handed off to on-duty nursing staff before administrative rescheduling.",
+      "Accommodate non-negotiable external constraints: Patient A's contracted medical transport departure cannot be missed without stranding an elderly patient.",
+      "Preserve privacy and patient dignity: Do not announce clinical conditions, diagnoses, or names over waiting room loudspeakers.",
+      "Formulate an orderly triage plan that balances patient well-being, clinic resources, and strict privacy standards.",
+    ],
+    referenceData: {
+      title: "Scheduled Patient Intake Roster (09:00 - 10:30 AM)",
+      disclosureNotice: "Fictional administrative intake roster. All patient details are synthetic.",
+      headers: ["Patient ID", "Appointment Type", "Clinical/Logistical Notes", "Operating Constraint"],
+      rows: [
+        ["Pt #101 (Age 72)", "Post-Chemotherapy Labs & Review", "Stable vitals, needs CBC blood draw & medication refill", "Non-emergency ambulance return dispatch at 11:30 AM sharp"],
+        ["Pt #102 (Age 44)", "Routine 6-Mo Remission Follow-Up", "Asymptomatic, maintenance phase", "Working remotely on laptop; flexible for afternoon"],
+        ["Pt #103 (Age 58)", "Post-Op Wound Review (Day 4)", "Reports surgical drain site redness, warmth & mild tenderness", "Arrived with daughter; acute pain rating 5/10"],
+        ["Pt #104 (Age 36)", "First-Time Oncology Consultation", "Complex referral with 3 biopsy slide envelopes", "Requires 45 min physician deep-dive review"],
+      ],
+      notes: [
+        "Clinic Protocol §4.2: Any post-surgical patient presenting with acute localized inflammation must be assessed by the floor triage nurse within 15 minutes of presentation.",
+        "Privacy Protocol: Under medical privacy standards, patient names, diagnoses, and medical histories must never be spoken across public waiting lounges.",
+      ],
+    },
+    practicalTask: {
+      prompt: "Select the soundest administrative coordination plan for Dr. Rao's delayed clinic and justify your prioritization logic:",
+      type: "choice_and_rationale",
+      options: [
+        {
+          id: "option-a",
+          label: "Safety Triage First & Coordinated Logistics: 1) Immediately escort Patient C to the nursing triage bay for clinical wound evaluation by Staff Nurse Preeti. 2) Fast-track Patient A's scheduled blood draw with the clinical fellow so results are ready and prescription refilled before the 11:30 AM ambulance departure. 3) Privately speak with Patient B in consultation nook, explain physician delay transparently, and offer priority 2:00 PM slot with parking voucher. 4) Reschedule Patient D's 45-minute comprehensive intake to tomorrow 9:00 AM so complex biopsy records receive unhurried attention.",
+          explanation: "Exemplary coordination: Prioritizes potential clinical risk (Patient C wound infection) through proper nursing referral without attempting unqualified diagnosis, resolves hard logistical transport limits (Patient A), respects patient time, and preserves thoroughness for complex new intake.",
+          score: 95,
+        },
+        {
+          id: "option-b",
+          label: "Standard Queue Order with Rapid Turnaround: Keep all 4 patients in their initial queue order in the lobby. When Dr. Rao arrives at 11:15 AM, compress each appointment to 8 minutes each to catch up with the morning schedule.",
+          explanation: "High risk: Leaves Patient C's inflamed surgical site unmonitored for over 2 hours, guarantees Patient A misses the medical transport van, and rushes complex cancer intake into an unsafe 8-minute superficial chat.",
+          score: 40,
+        },
+        {
+          id: "option-c",
+          label: "Unqualified Front-Desk Triage: The coordinator visually inspects Patient C's wound in the lobby, cancels Patient A's appointment completely, and instructs Patient D to leave confidential biopsy slides in an unattended basket at the reception counter.",
+          explanation: "Dangerous and non-compliant: Exceeds administrative scope by attempting unlicensed physical diagnosis, violates patient privacy regulations, risks specimen misplacement, and abandons an elderly patient reliant on ambulance transit.",
+          score: 25,
+        },
+      ],
+      starterContent: "Administrative Triage Plan:\nUrgent Safety Priority: Immediate nursing evaluation for Patient C.\nLogistical Resolution: Fast-track Patient A labs before ambulance window.\n\nMy operational justification & communication plan:",
+    },
+    evaluationCriteria: [
+      {
+        criterion: "Clinical Safety Awareness & Proper Delegation",
+        weight: 35,
+        description: "Recognizing urgent symptoms (e.g. post-op inflammation) and delegating immediately to licensed nursing staff rather than delaying or attempting unlicensed diagnosis.",
+      },
+      {
+        criterion: "Logistical & Transport Coordination",
+        weight: 30,
+        description: "Managing hard external constraints like fixed medical transit pick-up windows and laboratory turnarounds.",
+      },
+      {
+        criterion: "Patient Communication & Confidentiality",
+        weight: 20,
+        description: "Compassionate, discrete patient communication adhering to medical privacy standards without disclosure in waiting areas.",
+      },
+      {
+        criterion: "Operational Resource Optimization",
+        weight: 15,
+        description: "Protecting comprehensive consultation slots for complex diagnostic cases rather than dangerous superficial compression.",
+      },
+    ],
+    reflectionQuestions: [
+      "Did you enjoy balancing patient empathy, ethical rules, and fast-moving operational logistics?",
+      "Do you find satisfaction in keeping a high-stakes healthcare environment organized and patient-centered?",
+    ],
+    suggestedNextStep: "Explore GCP (Good Clinical Practice) fundamentals and Clinical Protocol Management in the Project Studio.",
+  },
+  {
+    id: "trial-environmental-data",
+    careerSlug: "environmental-data-researcher",
+    title: "Micro-Trial: Urban Heat Island & Air Quality Sensor Anomaly Analysis",
+    discipline: "science_research",
+    estimatedMinutes: 14,
+    disclaimerNotice: "SYNTHETIC DATASET NOTICE: This dataset is entirely synthetic and generated for educational and analytical skills evaluation. It does not represent verified field measurements of any actual city. In real environmental science, sensor calibration, sampling bias, and confounding variables must be rigorously controlled before publishing findings.",
+    objective: "Analyze a 5-day microclimate sensor dataset across urban zones, calculate cooling differentials, detect sensor missingness bias, and formulate evidence-based conclusions with scientific humility.",
+    scenario: "Greenfield Municipal Climate Action Team deployed microclimate sensor nodes across four distinct urban zones during a mid-summer heatwave. You have been provided the 5-day aggregated telemetry: Zone 1 (Industrial Logistics Yard), Zone 2 (Commercial High-Rise Core), Zone 3 (Suburban Residential), and Zone 4 (Protected Urban Forest Park). City leadership wants to know if expanding tree canopy will single-handedly solve both extreme heat and particulate pollution.",
+    instructions: [
+      "Compare daytime surface temperature and PM2.5 particulate levels across the four zones.",
+      "Calculate the observed temperature difference between the lowest canopy zone (Industrial) and highest canopy zone (Urban Forest Park).",
+      "Examine sensor missingness rates: Note that Zone 4 recorded 19.4% data loss due to dense canopy solar panel shading and cellular packet drop.",
+      "Evaluate whether correlation between canopy cover and lower pollution proves direct causation, or whether confounding factors (e.g., diesel truck traffic in Zone 1 vs zero vehicle traffic in Zone 4) must be factored in.",
+    ],
+    referenceData: {
+      title: "Greenfield Metro 5-Day Environmental Sensor Telemetry (Aggregated Daytime 08:00–18:00)",
+      disclosureNotice: "SYNTHETIC DATASET: Synthetic sensor observations created solely for data analysis practice.",
+      headers: ["Zone ID & Description", "Mean Surface Temp (°C)", "Mean PM2.5 (µg/m³)", "Tree Canopy Cover (%)", "Data Missingness Rate (%)", "Sensor Status"],
+      rows: [
+        ["Zone 1: Industrial Logistics Yard", "38.6°C", "94.2 µg/m³", "7.1%", "1.4%", "Calibrated / Continuous"],
+        ["Zone 2: Commercial Core", "36.4°C", "71.8 µg/m³", "12.4%", "0.8%", "Calibrated / Continuous"],
+        ["Zone 3: Suburban Residential", "32.1°C", "38.5 µg/m³", "36.2%", "2.9%", "Calibrated / Continuous"],
+        ["Zone 4: Urban Forest Park", "28.7°C", "18.9 µg/m³", "74.8%", "19.4%", "Flagged: Periodic Midday Solar Occlusion"],
+      ],
+      notes: [
+        "WHO 24-hr Guideline for PM2.5 is 15 µg/m³. Zone 1 exceeds by >6x; Zone 4 approaches guideline.",
+        "Missingness in Zone 4 clustered during 11:30 AM–14:00 PM due to canopy obstruction of telemetry solar pack, which could introduce a slight downward bias to reported daytime mean temperatures.",
+      ],
+    },
+    practicalTask: {
+      prompt: "Select the scientifically sound research interpretation and policy briefing:",
+      type: "choice_and_rationale",
+      options: [
+        {
+          id: "option-a",
+          label: "Evidence-Based Analysis with Uncertainty Bounds: 1) Report an observed 9.9°C temperature delta (38.6°C vs 28.7°C) and a 75.3 µg/m³ PM2.5 difference between industrial and forested zones. 2) Explicitly disclose that Zone 4's 19.4% missingness during peak midday hours likely introduces a slight downward temperature bias. 3) Warn city council that while canopy expansion provides proven thermal cooling, the PM2.5 discrepancy is heavily confounded by industrial freight emissions; tree planting alone without industrial emission controls will not achieve clean air targets.",
+          explanation: "Exemplary scientific rigor: Accurate math (38.6 - 28.7 = 9.9°C), candid disclosure of sensor telemetry limitations, and careful distinction between correlation and causation without making misleading promises to policymakers.",
+          score: 95,
+        },
+        {
+          id: "option-b",
+          label: "Deterministic Causal Projection: Announce that increasing canopy cover by 20% in Zone 1 is guaranteed to reduce surface temperatures by exactly 3.2°C and eliminate particulate pollution within 60 days. Dismiss the 19.4% missing data in Zone 4 as inconsequential.",
+          explanation: "Flawed science: Assumes linear determinism, ignores vehicle emission confounders, and hides significant sensor data gaps from decision-makers.",
+          score: 40,
+        },
+        {
+          id: "option-c",
+          label: "Selective Data Pruning: Remove Zone 4 completely from the study to avoid discussing missing data, and tell the council that temperature has no relationship to vegetation.",
+          explanation: "Scientific malpractice: Discards relevant empirical observations to conceal sensor maintenance issues and produces a misleading conclusion directly contradicting environmental physics.",
+          score: 20,
+        },
+      ],
+      starterContent: "Environmental Sensor Data Analysis:\nCalculated Thermal Delta: 38.6°C - 28.7°C = 9.9°C cooling differential.\nSensor Data Limitation: 19.4% missingness in Zone 4 due to solar occlusion.\n\nMy scientific interpretation & policy advisory:",
+    },
+    evaluationCriteria: [
+      {
+        criterion: "Calculation Accuracy & Data Interpretation",
+        weight: 35,
+        description: "Accurate computation of thermal differentials (9.9°C) and particulate gradients across urban typologies.",
+      },
+      {
+        criterion: "Scientific Uncertainty & Missingness Auditing",
+        weight: 30,
+        description: "Recognizing sampling bias caused by intermittent sensor outages during peak solar periods.",
+      },
+      {
+        criterion: "Confounder Analysis (Correlation vs Causation)",
+        weight: 25,
+        description: "Differentiating vegetation cooling from vehicular emission baselines rather than attributing all variance to canopy alone.",
+      },
+      {
+        criterion: "Policy Communication & Research Integrity",
+        weight: 10,
+        description: "Honest, evidence-based recommendations that protect public credibility without overpromising.",
+      },
+    ],
+    reflectionQuestions: [
+      "Did you enjoy working with sensor tables, spotting hidden measurement quirks, and reasoning about physical environments?",
+      "Do you prefer discovering what data actually proves versus what people assume it proves?",
+    ],
+    suggestedNextStep: "Explore the Geospatial Python & Satellite Remote Sensing project in Project Studio.",
+  },
+  {
+    id: "trial-investigative-tech",
+    careerSlug: "investigative-tech-journalist",
+    title: "Micro-Trial: Automated Hiring Algorithm Leak & Multi-Source Verification",
+    discipline: "media_communication",
+    estimatedMinutes: 12,
+    disclaimerNotice: "FICTIONAL SCENARIO NOTICE: All product names ('TalentScan AI'), corporate entities, audit documents, and source excerpts in this trial are entirely fictional and synthesized for journalism training. No real companies, researchers, or individuals are represented. Professional investigative journalism requires independent verification, source protection, and rigorous right-of-reply standards.",
+    objective: "Evaluate a leak alleging algorithmic bias in an automated hiring tool, cross-examine corporate claims against independent academic research, and draft a balanced investigative brief with ethical right-of-reply.",
+    scenario: "A leaked internal engineering document from 'TalentScan AI' (a video-interview candidate screening tool used by major employers) lands in your newsroom inbox. The anonymous whistleblower claims the scoring model flags candidates with regional non-native accents with a 3.4x higher rejection rate. The company recently published a press release claiming 99.8% demographic neutrality. An independent university preprint from 4 months ago also analyzed the system with mixed findings.",
+    instructions: [
+      "Analyze the 4 source excerpts in the investigative dossier.",
+      "Classify each source's reliability and bias: Differentiate between unverified anonymous leak, corporate public relations marketing, peer-reviewed academic testing, and individual social media venting.",
+      "Formulate a verification plan: Cross-check the leak with documented test data, seek confirmation from former employees, and issue a specific right-of-reply inquiry to TalentScan AI leadership.",
+      "Avoid defamatory clickbait while holding high-stakes algorithmic automation accountable.",
+    ],
+    sourceExcerpts: [
+      {
+        id: "src-1",
+        sourceLabel: "Source 1: Anonymous Whistleblower Slack Leak",
+        sourceType: "internal_leak",
+        excerptText: "'Product team ignored the October bias sprint results. The acoustic model has a 3.4x false rejection rate on heavy regional accents. VP insisted on shipping for Q4 enterprise contracts anyway.'",
+        classification: "unverified",
+        analysis: "Highly valuable lead with specific dates and internal jargon, but an unauthenticated screenshot that could be fabricated, altered, or taken out of context. Cannot be reported as verified truth without corroboration.",
+      },
+      {
+        id: "src-2",
+        sourceLabel: "Source 2: TalentScan Official Press Statement",
+        sourceType: "company_pr",
+        excerptText: "'TalentScan AI represents the gold standard in inclusive hiring, achieving 99.8% demographic neutrality across gender and ethnicity in rigorous third-party auditing.'",
+        classification: "disputed",
+        analysis: "Corporate PR claim that conveniently omits accent and linguistic diversity; uses vague terms ('third-party auditing') without naming the audit firm or publishing testing parameters.",
+      },
+      {
+        id: "src-3",
+        sourceLabel: "Source 3: University AI Accountability Lab Pre-print",
+        sourceType: "independent_audit",
+        excerptText: "'In automated testing of 400 synthetic audio clips across 8 acoustic profiles, TalentScan's public API returned an 18.2% lower mean confidence score for speakers with South Asian and West African phoneme patterns (p < 0.01). Note: Evaluated on API v2.3; company released v3.0 last month.'",
+        classification: "supported",
+        analysis: "Empirically documented methodology with statistical significance, but notes a version caveat (tested v2.3 rather than the current v3.0 release). Solid anchor for technical inquiry.",
+      },
+      {
+        id: "src-4",
+        sourceLabel: "Source 4: Reddit /r/jobs Candidate Thread",
+        sourceType: "user_opinion",
+        excerptText: "'I got rejected in 4 minutes after speaking 2 sentences. This garbage AI is 100% racist and intentionally fails anyone who isn't an American native speaker!'",
+        classification: "opinion",
+        analysis: "Real human frustration and narrative color illustrating applicant stress, but an anecdotal opinion without technical insight into the rejection cause. Cannot be cited as proof of intentional systemic bias.",
+      },
+    ],
+    practicalTask: {
+      prompt: "Select the ethically and legally sound investigative reporting plan:",
+      type: "choice_and_rationale",
+      options: [
+        {
+          id: "option-a",
+          label: "Multi-Source Verification & Formal Right-of-Reply: 1) Anchor the reporting on the university lab's verified 18.2% acoustic disparity while noting the version nuance. 2) Corroborate the leaked Slack thread by contacting additional former engineers on Signal. 3) Send a formal, detailed right-of-reply questionnaire to TalentScan AI citing the October audit and university findings, giving 48 hours for response. 4) Publish an investigative piece detailing the empirical findings, the internal whistleblower allegations, the company's defense, and the broader lack of hiring transparency.",
+          explanation: "Gold standard investigative journalism: Transparently distinguishes verified academic findings from anonymous leaks, seeks primary document corroboration, grants fair right-of-reply, and holds algorithmic power accountable without sensationalizing unverified screenshots.",
+          score: 95,
+        },
+        {
+          id: "option-b",
+          label: "Viral Breaking News Scoop: Publish the leaked screenshot immediately under the headline 'Leaked Chat Proves TalentScan AI Is Deliberately Racist', embedding the Reddit comment as public evidence without contacting TalentScan AI.",
+          explanation: "Severe journalistic breach: Vulnerable to defamation lawsuits, prints unverified claims as absolute facts, cites anonymous social media comments as proof of intent, and fails basic right-of-reply standards.",
+          score: 35,
+        },
+        {
+          id: "option-c",
+          label: "Uncritical PR Stenography: Disregard the whistleblower leak and the academic study as anti-tech bias, and publish a sponsored summary of TalentScan's 99.8% demographic neutrality press release.",
+          explanation: "Abandons investigative watchdog role: Repackages corporate marketing spin as independent news and leaves real algorithmic discrimination unexamined.",
+          score: 30,
+        },
+      ],
+      starterContent: "Investigative Reporting Plan:\nVerified Empirical Anchor: University pre-print (18.2% acoustic confidence disparity).\nCorroboration Required: Primary confirmation of internal October Slack thread.\n\nMy verification roadmap & right-of-reply structure:",
+    },
+    evaluationCriteria: [
+      {
+        criterion: "Source Triangulation & Verification Standards",
+        weight: 35,
+        description: "Distinguishing between verified academic data, uncorroborated leaks, corporate spin, and anecdotal opinion.",
+      },
+      {
+        criterion: "Ethical Right-of-Reply & Fairness",
+        weight: 30,
+        description: "Providing clear technical queries and fair deadlines to subjects of investigation before publication.",
+      },
+      {
+        criterion: "Public Accountability & Rigorous Framing",
+        weight: 25,
+        description: "Holding algorithmic systems accountable to affected communities without resorting to clickbait or defamation.",
+      },
+      {
+        criterion: "Legal Prudence & Attribution Accuracy",
+        weight: 10,
+        description: "Proper hedging, attribution of sources, and protection of confidential whistleblower channels.",
+      },
+    ],
+    reflectionQuestions: [
+      "Did you enjoy digging behind corporate claims, questioning numbers, and verifying facts?",
+      "Do you find satisfaction in acting as an objective watchdog for truth and public transparency?",
+    ],
+    suggestedNextStep: "Review the Investigative Tech Journalism feature project brief in Project Studio.",
+  },
 ];
+
+export interface RubricEvaluationResult {
+  score: number; // 0 - 100
+  ratingBand: "exemplary" | "proficient" | "developing" | "needs_revision";
+  criteriaScores: {
+    criterion: string;
+    weight: number;
+    score: number;
+    feedback: string;
+  }[];
+  overallFeedback: string;
+}
+
+export function evaluateTrialSubmission(
+  trial: CareerTrial,
+  selectedOptionId: string,
+  rationale: string
+): RubricEvaluationResult {
+  const selectedOption = trial.practicalTask.options?.find((o) => o.id === selectedOptionId);
+  const baseScore = selectedOption ? selectedOption.score : 50;
+
+  // Rationale depth adjustment (max +5 bonus if rationale is thoughtful and substantive)
+  const trimmed = (rationale || "").trim();
+  const starter = (trial.practicalTask.starterContent || "").trim();
+  const addedContent = trimmed.replace(starter, "").trim();
+
+  let rationaleBonus = 0;
+  if (addedContent.length >= 60) {
+    rationaleBonus = 5;
+  } else if (addedContent.length >= 25) {
+    rationaleBonus = 3;
+  }
+
+  const finalScore = Math.min(100, Math.max(15, baseScore + rationaleBonus));
+
+  let ratingBand: RubricEvaluationResult["ratingBand"] = "developing";
+  if (finalScore >= 90) ratingBand = "exemplary";
+  else if (finalScore >= 75) ratingBand = "proficient";
+  else if (finalScore >= 45) ratingBand = "developing";
+  else ratingBand = "needs_revision";
+
+  const criteriaScores = trial.evaluationCriteria.map((crit) => {
+    const factor = baseScore >= 90 ? 1.0 : baseScore >= 60 ? 0.72 : baseScore >= 35 ? 0.48 : 0.32;
+    const critScore = Math.min(100, Math.max(15, Math.round(finalScore * factor + (crit.weight * 0.1))));
+
+    let feedback = "";
+    if (critScore >= 85) {
+      feedback = `Demonstrates strong mastery of ${crit.criterion.toLowerCase()}.`;
+    } else if (critScore >= 60) {
+      feedback = `Shows basic grasp of ${crit.criterion.toLowerCase()}, but leaves key trade-offs unaddressed.`;
+    } else {
+      feedback = `Critical vulnerability in ${crit.criterion.toLowerCase()} requiring systematic review.`;
+    }
+
+    return {
+      criterion: crit.criterion,
+      weight: crit.weight,
+      score: critScore,
+      feedback,
+    };
+  });
+
+  return {
+    score: finalScore,
+    ratingBand,
+    criteriaScores,
+    overallFeedback: selectedOption
+      ? selectedOption.explanation
+      : "Decision recorded and evaluated against scenario criteria.",
+  };
+}
+
+export function getTrialById(id: string): CareerTrial | undefined {
+  return CAREER_TRIALS.find((t) => t.id === id);
+}
+
+export function getTrialByCareerSlug(careerSlug: string): CareerTrial | undefined {
+  return CAREER_TRIALS.find((t) => t.careerSlug === careerSlug);
+}
+
+export function isCareerTrialCompleted(profile: { completedTrialIds: string[] }, careerSlug: string): boolean {
+  return CAREER_TRIALS.some(
+    (trial) => trial.careerSlug === careerSlug && profile.completedTrialIds.includes(trial.id)
+  );
+}
