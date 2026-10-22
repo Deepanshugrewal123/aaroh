@@ -315,90 +315,194 @@ describe("Phase 10: Complete Security Remediation & Privacy Verification", () =>
       expect(blockedCount).toBe(3); // 21, 22, 23
     });
 
-    it("Securely extracts client IP respecting platform boundaries and rejecting spoofed headers", () => {
-      // 1. Native request IP takes highest precedence across all environments
+    it("Securely resolves trusted proxy mode with strict fail-closed default for unknown hosting", () => {
+      const origEnv = { ...process.env };
+      try {
+        // 1. Unknown / unset environment MUST fail closed to 'none'
+        delete process.env.TRUSTED_PROXY;
+        delete process.env.VERCEL;
+        delete process.env.CF_PAGES;
+        expect(getTrustedProxyMode()).toBe("none");
+
+        // 2. Explicit untrusted flags fail closed to 'none'
+        process.env.TRUSTED_PROXY = "none";
+        expect(getTrustedProxyMode()).toBe("none");
+        process.env.TRUSTED_PROXY = "false";
+        expect(getTrustedProxyMode()).toBe("none");
+        process.env.TRUSTED_PROXY = "0";
+        expect(getTrustedProxyMode()).toBe("none");
+
+        // 3. Explicit Vercel platform
+        process.env.TRUSTED_PROXY = "vercel";
+        expect(getTrustedProxyMode()).toBe("vercel");
+
+        // 4. Explicit Cloudflare platform
+        process.env.TRUSTED_PROXY = "cloudflare";
+        expect(getTrustedProxyMode()).toBe("cloudflare");
+
+        // 5. Explicit Custom proxy configuration
+        process.env.TRUSTED_PROXY = "custom";
+        expect(getTrustedProxyMode()).toBe("custom");
+        process.env.TRUSTED_PROXY = "true";
+        expect(getTrustedProxyMode()).toBe("custom");
+        process.env.TRUSTED_PROXY = "1";
+        expect(getTrustedProxyMode()).toBe("custom");
+
+        // 6. Platform auto-detection
+        delete process.env.TRUSTED_PROXY;
+        process.env.VERCEL = "1";
+        expect(getTrustedProxyMode()).toBe("vercel");
+
+        delete process.env.VERCEL;
+        process.env.CF_PAGES = "1";
+        expect(getTrustedProxyMode()).toBe("cloudflare");
+      } finally {
+        process.env = origEnv;
+      }
+    });
+
+    it("Securely extracts client IP respecting platform boundaries, conflicting headers, and unknown hosting", () => {
+      // 1. Authoritative request IP takes precedence when valid
       const h0 = new Headers({ "x-forwarded-for": "1.2.3.4", "x-real-ip": "5.6.7.8" });
-      expect(extractClientIp(h0, "203.0.113.50")).toBe("203.0.113.50");
+      expect(extractClientIp(h0, "203.0.113.50", "none")).toBe("203.0.113.50");
+      expect(extractClientIp(h0, "203.0.113.50", "vercel")).toBe("203.0.113.50");
+      expect(extractClientIp(h0, "203.0.113.50", "cloudflare")).toBe("203.0.113.50");
+      expect(extractClientIp(h0, "203.0.113.50", "custom")).toBe("203.0.113.50");
 
       // 2. Reject fake 'x-vercel-ip': Not an authentic Vercel header, must NEVER be trusted
       const hFakeVercel = new Headers({
         "x-vercel-ip": "198.51.100.99",
         "x-real-ip": "203.0.113.10",
       });
-      // In Vercel mode, x-real-ip is the authentic verified header; x-vercel-ip is ignored
       expect(extractClientIp(hFakeVercel, null, "vercel")).toBe("203.0.113.10");
 
-      // 3. Cloudflare: Trust 'cf-connecting-ip' ONLY when Cloudflare proxy mode is explicitly active
+      // 3. Conflicting headers in Vercel mode: x-real-ip is authoritative over x-forwarded-for; CF & Vercel-IP ignored
+      const hConflictVercel = new Headers({
+        "x-real-ip": "203.0.113.10",
+        "x-forwarded-for": "10.0.0.1, 10.0.0.2",
+        "cf-connecting-ip": "198.51.100.77",
+        "x-vercel-ip": "198.51.100.99",
+      });
+      expect(extractClientIp(hConflictVercel, null, "vercel")).toBe("203.0.113.10");
+
+      // Vercel fallback: when x-real-ip absent, uses x-forwarded-for[0]
+      const hVercelXffOnly = new Headers({ "x-forwarded-for": "203.0.113.25, 10.0.0.1" });
+      expect(extractClientIp(hVercelXffOnly, null, "vercel")).toBe("203.0.113.25");
+
+      // 4. Cloudflare: Trust 'cf-connecting-ip' ONLY when Cloudflare proxy mode is explicitly active
       const hCf = new Headers({
         "cf-connecting-ip": "198.51.100.77",
+        "x-real-ip": "10.0.0.5",
         "x-forwarded-for": "10.0.0.1",
       });
-      // In Cloudflare mode -> trusted
+      // In Cloudflare mode -> cf-connecting-ip is trusted and authoritative
       expect(extractClientIp(hCf, null, "cloudflare")).toBe("198.51.100.77");
       // In Vercel mode -> CF-Connecting-IP is untrusted and ignored
-      expect(extractClientIp(hCf, null, "vercel")).toBe("10.0.0.1");
+      expect(extractClientIp(hCf, null, "vercel")).toBe("10.0.0.5");
+      // In Custom mode -> CF-Connecting-IP is untrusted and ignored; uses x-real-ip
+      expect(extractClientIp(hCf, null, "custom")).toBe("10.0.0.5");
 
-      // 4. Untrusted proxy mode ('none'): All incoming proxy headers are untrusted
+      // Cloudflare fallback: when cf-connecting-ip absent, uses x-forwarded-for[0]
+      const hCfXffOnly = new Headers({ "x-forwarded-for": "198.51.100.88, 10.0.0.1" });
+      expect(extractClientIp(hCfXffOnly, null, "cloudflare")).toBe("198.51.100.88");
+
+      // 5. Custom proxy mode: Operator-configured reverse proxy (NGINX / ALB)
+      const hCustom = new Headers({
+        "x-real-ip": "198.51.100.55",
+        "x-forwarded-for": "10.0.0.1",
+        "cf-connecting-ip": "203.0.113.77",
+      });
+      expect(extractClientIp(hCustom, null, "custom")).toBe("198.51.100.55");
+
+      // 6. Unknown / Untrusted proxy mode ('none'): All incoming proxy headers are untrusted
       const hUntrusted = new Headers({
         "x-forwarded-for": "198.51.100.42",
         "x-real-ip": "198.51.100.43",
         "cf-connecting-ip": "198.51.100.44",
+        "x-vercel-ip": "198.51.100.45",
       });
       expect(extractClientIp(hUntrusted, null, "none")).toBe("anonymous-client");
 
-      // 5. Malformed / injection strings fallback safely to anonymous-client
-      const hBad = new Headers({ "x-forwarded-for": "<script>alert(1)</script>" });
-      expect(extractClientIp(hBad)).toBe("anonymous-client");
+      // Unknown hosting with no environment variables set fails closed to anonymous-client
+      const origEnv = { ...process.env };
+      try {
+        delete process.env.TRUSTED_PROXY;
+        delete process.env.VERCEL;
+        delete process.env.CF_PAGES;
+        expect(extractClientIp(hUntrusted)).toBe("anonymous-client");
+      } finally {
+        process.env = origEnv;
+      }
 
-      // 6. Valid IPv4 and IPv6 recognition
+      // 7. Missing or malformed headers fallback safely to anonymous-client
+      const hEmpty = new Headers({});
+      expect(extractClientIp(hEmpty, null, "none")).toBe("anonymous-client");
+      expect(extractClientIp(hEmpty, null, "vercel")).toBe("anonymous-client");
+      expect(extractClientIp(hEmpty, null, "cloudflare")).toBe("anonymous-client");
+      expect(extractClientIp(hEmpty, null, "custom")).toBe("anonymous-client");
+
+      const hBad = new Headers({ "x-forwarded-for": "<script>alert(1)</script>" });
+      expect(extractClientIp(hBad, null, "custom")).toBe("anonymous-client");
+
+      // 8. Valid IPv4 and IPv6 recognition
       expect(isValidIp("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe(true);
       expect(isValidIp("198.51.100.1")).toBe(true);
       expect(isValidIp("not-an-ip-address")).toBe(false);
       expect(isValidIp("999.999.999.999")).toBe(false);
     });
 
-    it("Prevents callers from rotating spoofed headers to bypass rate limits in untrusted proxy mode", async () => {
-      // In an environment where no trusted proxy exists (TRUSTED_PROXY=none)
-      process.env.TRUSTED_PROXY = "none";
+    it("Prevents callers from rotating spoofed headers to bypass rate limits in unknown hosting mode", async () => {
+      // In an environment where no trusted proxy exists (TRUSTED_PROXY unset, not on Vercel or CF Pages)
+      const origEnv = { ...process.env };
+      delete process.env.TRUSTED_PROXY;
+      delete process.env.VERCEL;
+      delete process.env.CF_PAGES;
 
-      // An attacker attempts to rotate X-Forwarded-For and X-Real-IP on every request
-      for (let i = 0; i < 20; i++) {
-        const req = new NextRequest("http://localhost:3000/api/ai/chat", {
+      resetRateLimitsForTesting();
+
+      try {
+        // An attacker attempts to rotate X-Forwarded-For and X-Real-IP on every request
+        for (let i = 0; i < 20; i++) {
+          const req = new NextRequest("http://localhost:3000/api/ai/chat", {
+            method: "POST",
+            headers: {
+              "x-forwarded-for": `192.0.2.${i}`,
+              "x-real-ip": `198.51.100.${i}`,
+              "cf-connecting-ip": `203.0.113.${i}`,
+              "x-vercel-ip": `10.0.0.${i}`,
+            },
+            body: JSON.stringify({
+              messages: [{ role: "user", content: `Rotating header attempt ${i}` }],
+              profile: EMPTY_PROFILE,
+            }),
+          });
+
+          const res = await POST(req);
+          expect(res.status).toBe(200);
+        }
+
+        // 21st attempt with another new fake IP MUST be blocked because untrusted headers cannot rotate identity
+        const blockedReq = new NextRequest("http://localhost:3000/api/ai/chat", {
           method: "POST",
           headers: {
-            "x-forwarded-for": `192.0.2.${i}`,
-            "x-real-ip": `198.51.100.${i}`,
-            "cf-connecting-ip": `203.0.113.${i}`,
-            "x-vercel-ip": `10.0.0.${i}`,
+            "x-forwarded-for": "192.0.2.99",
+            "x-real-ip": "198.51.100.99",
+            "cf-connecting-ip": "203.0.113.99",
           },
           body: JSON.stringify({
-            messages: [{ role: "user", content: `Rotating header attempt ${i}` }],
+            messages: [{ role: "user", content: "Blocked rotating attempt 21" }],
             profile: EMPTY_PROFILE,
           }),
         });
 
-        const res = await POST(req);
-        expect(res.status).toBe(200);
+        const blockedRes = await POST(blockedReq);
+        expect(blockedRes.status).toBe(429);
+        const data = await blockedRes.json();
+        expect(data.error).toContain("Too many requests");
+      } finally {
+        process.env = origEnv;
+        resetRateLimitsForTesting();
       }
-
-      // 21st attempt with another new fake IP MUST be blocked because untrusted headers cannot rotate identity
-      const blockedReq = new NextRequest("http://localhost:3000/api/ai/chat", {
-        method: "POST",
-        headers: {
-          "x-forwarded-for": "192.0.2.99",
-          "x-real-ip": "198.51.100.99",
-          "cf-connecting-ip": "203.0.113.99",
-        },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: "Blocked rotating attempt 21" }],
-          profile: EMPTY_PROFILE,
-        }),
-      });
-
-      const blockedRes = await POST(blockedReq);
-      expect(blockedRes.status).toBe(429);
-      const data = await blockedRes.json();
-      expect(data.error).toContain("Too many requests");
     });
 
     it("Enforces a strict 5,000 entry hard cap when more than 5,000 distinct unexpired clients send requests", () => {

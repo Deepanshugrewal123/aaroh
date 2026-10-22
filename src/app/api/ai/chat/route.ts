@@ -43,7 +43,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. IP Rate Limiting (Distributed when Upstash Redis configured; in-memory fallback otherwise)
-    // Secure extraction defends against arbitrary spoofed X-Forwarded-For headers
+    // NOTE: NextRequest does not expose raw Node TCP socket.remoteAddress in standalone Next.js.
+    // (req as any).ip is only present if populated by Vercel Edge Runtime or upstream middleware.
+    // extractClientIp fails closed to "anonymous-client" in unverified/unknown hosting environments.
     const clientIp = extractClientIp(req.headers, (req as any).ip);
 
     const rateResult = await checkRateLimitAsync(clientIp);
