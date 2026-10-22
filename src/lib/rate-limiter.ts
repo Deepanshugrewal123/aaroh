@@ -19,8 +19,84 @@ interface RateLimitRecord {
 }
 
 const localRateLimitMap = new Map<string, RateLimitRecord>();
+const MAX_MAP_SIZE_BEFORE_PRUNING = 5000;
 export const DEFAULT_RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 export const DEFAULT_MAX_REQUESTS_PER_WINDOW = 20;
+
+/**
+ * Validates whether an input string is a valid IPv4 or IPv6 address.
+ * Prevents memory key pollution and header injection attacks.
+ */
+export function isValidIp(ip: string): boolean {
+  if (!ip || typeof ip !== "string" || ip.length > 45) {
+    return false;
+  }
+  // IPv4 validation
+  const ipv4Match = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ip);
+  if (ipv4Match) {
+    const octets = ipv4Match.slice(1, 5).map(Number);
+    return octets.every((o) => o >= 0 && o <= 255);
+  }
+  // IPv6 validation: hex groups separated by colons (allowing :: compression)
+  const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))$/;
+  return ipv6Regex.test(ip);
+}
+
+/**
+ * Securely extracts client IP respecting trusted proxy architecture.
+ * Prevents spoofing via arbitrary client-controlled X-Forwarded-For headers.
+ */
+export function extractClientIp(
+  headers: Headers | { get(name: string): string | null },
+  reqIp?: string | null
+): string {
+  // 1. Next.js runtime IP (populated by Vercel / trusted reverse proxy)
+  if (reqIp && isValidIp(reqIp)) {
+    return reqIp;
+  }
+
+  // 2. Platform-verified headers (cannot be forged by clients if terminated by proxy)
+  const vercelIp = headers.get("x-vercel-ip")?.trim();
+  if (vercelIp && isValidIp(vercelIp)) {
+    return vercelIp;
+  }
+
+  const cfIp = headers.get("cf-connecting-ip")?.trim();
+  if (cfIp && isValidIp(cfIp)) {
+    return cfIp;
+  }
+
+  const realIp = headers.get("x-real-ip")?.trim();
+  if (realIp && isValidIp(realIp)) {
+    return realIp;
+  }
+
+  // 3. X-Forwarded-For: Client can spoof the leftmost IP, but each trusted proxy appends
+  // the connecting client IP to the right. Therefore, the rightmost valid entry represents
+  // the real IP seen by the closest trusted reverse proxy.
+  const xForwardedFor = headers.get("x-forwarded-for");
+  if (xForwardedFor) {
+    const parts = xForwardedFor.split(",").map((p) => p.trim());
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (isValidIp(parts[i])) {
+        return parts[i];
+      }
+    }
+  }
+
+  return "anonymous-client";
+}
+
+/**
+ * Prunes expired entries from local in-memory map to prevent unbounded memory growth.
+ */
+function pruneExpiredLocalRecords(now: number): void {
+  for (const [key, record] of localRateLimitMap.entries()) {
+    if (record.resetAt <= now) {
+      localRateLimitMap.delete(key);
+    }
+  }
+}
 
 /**
  * Inspects environment variables to determine the rate limiter backend capability.
@@ -67,6 +143,12 @@ export function checkRateLimit(
   windowMs: number = DEFAULT_RATE_LIMIT_WINDOW_MS
 ): { allowed: boolean; retryAfterSeconds?: number; backend: string } {
   const now = Date.now();
+
+  // Guard against unbounded memory consumption
+  if (localRateLimitMap.size > MAX_MAP_SIZE_BEFORE_PRUNING) {
+    pruneExpiredLocalRecords(now);
+  }
+
   const record = localRateLimitMap.get(clientIdentifier);
 
   if (record && record.resetAt > now) {
@@ -101,7 +183,7 @@ export async function checkRateLimitAsync(
       const key = `aaroh:ratelimit:${clientIdentifier}`;
       const windowSeconds = Math.ceil(windowMs / 1000);
 
-      // Multi-command pipeline: INCR then EXPIRE (if new key)
+      // Multi-command atomic pipeline: INCR then EXPIRE NX
       const pipelineRes = await fetch(`${upstashUrl}/pipeline`, {
         method: "POST",
         headers: {
@@ -115,25 +197,39 @@ export async function checkRateLimitAsync(
         signal: AbortSignal.timeout(2000), // 2s fail-safe timeout
       });
 
-      if (pipelineRes.ok) {
-        const results = await pipelineRes.json();
-        const currentCount = Number(results?.[0]?.result || 1);
+      if (!pipelineRes.ok) {
+        throw new Error(`Upstash HTTP error ${pipelineRes.status}`);
+      }
 
-        if (currentCount > maxRequests) {
-          return {
-            allowed: false,
-            retryAfterSeconds: windowSeconds,
-            backend: "upstash-redis-distributed",
-          };
-        }
+      const results = await pipelineRes.json();
 
+      // Defend against malformed responses or Redis command errors
+      if (!Array.isArray(results) || results.length === 0 || results[0]?.error) {
+        throw new Error(results?.[0]?.error || "Malformed Redis pipeline response");
+      }
+
+      const currentCount = Number(results[0]?.result);
+      if (typeof currentCount !== "number" || isNaN(currentCount)) {
+        throw new Error("Invalid count returned from Redis pipeline");
+      }
+
+      if (currentCount > maxRequests) {
         return {
-          allowed: true,
+          allowed: false,
+          retryAfterSeconds: windowSeconds,
           backend: "upstash-redis-distributed",
         };
       }
+
+      return {
+        allowed: true,
+        backend: "upstash-redis-distributed",
+      };
     } catch (err: unknown) {
-      console.warn("Distributed rate limiter unavailable; falling back to local memory limiter:", err instanceof Error ? err.message : String(err));
+      console.warn(
+        "Distributed rate limiter unavailable; falling back to local memory limiter:",
+        err instanceof Error ? err.message : String(err)
+      );
     }
   }
 

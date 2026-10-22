@@ -6,6 +6,8 @@ import {
   checkRateLimitAsync,
   getRateLimiterBackendStatus,
   resetRateLimitsForTesting,
+  isValidIp,
+  extractClientIp,
 } from "@/lib/rate-limiter";
 import {
   createStudentBackupSnapshot,
@@ -230,6 +232,112 @@ describe("Phase 10: Complete Security Remediation & Privacy Verification", () =>
       expect(check.allowed).toBe(true);
       expect(check.backend).toBe("upstash-redis-distributed");
       expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("Enforces rate limits in distributed mode when Redis counter exceeds threshold", async () => {
+      process.env.UPSTASH_REDIS_REST_URL = "https://mock-upstash.redis.io";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "mock-upstash-token";
+
+      // Mock Upstash returning count = 21 (limit exceeded)
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [{ result: 21 }, { result: 0 }],
+      });
+      global.fetch = mockFetch;
+
+      const check = await checkRateLimitAsync("test-client-exceeded", 20, 60000);
+      expect(check.allowed).toBe(false);
+      expect(check.retryAfterSeconds).toBe(60);
+      expect(check.backend).toBe("upstash-redis-distributed");
+    });
+
+    it("Safely falls back to local in-memory rate limiter on malformed Redis responses", async () => {
+      process.env.UPSTASH_REDIS_REST_URL = "https://mock-upstash.redis.io";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "mock-upstash-token";
+
+      // Mock Upstash returning unexpected error structure or non-array
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ error: "ERR syntax error in pipeline" }),
+      });
+      global.fetch = mockFetch;
+
+      // Must NOT fail open or throw; must fall back to local limiter
+      const check = await checkRateLimitAsync("test-client-malformed");
+      expect(check.allowed).toBe(true);
+      expect(check.backend).toBe("in-memory-fallback");
+    });
+
+    it("Safely falls back to local limiter when Redis call times out or encounters network error", async () => {
+      process.env.UPSTASH_REDIS_REST_URL = "https://mock-upstash.redis.io";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "mock-upstash-token";
+
+      const mockFetch = vi.fn().mockRejectedValue(new Error("Upstream connection timeout"));
+      global.fetch = mockFetch;
+
+      const check = await checkRateLimitAsync("test-client-timeout");
+      expect(check.allowed).toBe(true);
+      expect(check.backend).toBe("in-memory-fallback");
+    });
+
+    it("Handles concurrent rate limit requests atomically without split-brain or bypass", async () => {
+      process.env.UPSTASH_REDIS_REST_URL = "https://mock-upstash.redis.io";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "mock-upstash-token";
+
+      let simulatedCounter = 18;
+      const mockFetch = vi.fn().mockImplementation(async () => {
+        const thisCount = ++simulatedCounter;
+        return {
+          ok: true,
+          json: async () => [{ result: thisCount }, { result: 0 }],
+        };
+      });
+      global.fetch = mockFetch;
+
+      // Dispatch 5 concurrent requests (19, 20 should pass; 21, 22, 23 must be blocked)
+      const results = await Promise.all([
+        checkRateLimitAsync("concurrent-ip", 20, 60000),
+        checkRateLimitAsync("concurrent-ip", 20, 60000),
+        checkRateLimitAsync("concurrent-ip", 20, 60000),
+        checkRateLimitAsync("concurrent-ip", 20, 60000),
+        checkRateLimitAsync("concurrent-ip", 20, 60000),
+      ]);
+
+      const allowedCount = results.filter((r) => r.allowed).length;
+      const blockedCount = results.filter((r) => !r.allowed).length;
+
+      expect(allowedCount).toBe(2); // 19 and 20
+      expect(blockedCount).toBe(3); // 21, 22, 23
+    });
+
+    it("Securely extracts client IP, rejecting spoofed leftmost X-Forwarded-For headers", () => {
+      // 1. Valid single IP
+      const h1 = new Headers({ "x-forwarded-for": "203.0.113.195" });
+      expect(extractClientIp(h1)).toBe("203.0.113.195");
+
+      // 2. Spoofed multi-hop header: Client prepends fake IP "10.0.0.1", real edge IP is "198.51.100.42"
+      const h2 = new Headers({ "x-forwarded-for": "10.0.0.1, 198.51.100.42" });
+      expect(extractClientIp(h2)).toBe("198.51.100.42");
+
+      // 3. Platform header priority (Vercel IP takes precedence over X-Forwarded-For)
+      const h3 = new Headers({
+        "x-vercel-ip": "198.51.100.99",
+        "x-forwarded-for": "1.2.3.4",
+      });
+      expect(extractClientIp(h3)).toBe("198.51.100.99");
+
+      // 4. Native request IP takes highest precedence
+      const h4 = new Headers({ "x-forwarded-for": "1.2.3.4" });
+      expect(extractClientIp(h4, "203.0.113.50")).toBe("203.0.113.50");
+
+      // 5. Malformed / injection strings fallback safely to anonymous-client
+      const h5 = new Headers({ "x-forwarded-for": "<script>alert(1)</script>" });
+      expect(extractClientIp(h5)).toBe("anonymous-client");
+
+      // 6. Valid IPv6 address recognition
+      expect(isValidIp("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe(true);
+      expect(isValidIp("not-an-ip-address")).toBe(false);
+      expect(isValidIp("999.999.999.999")).toBe(false);
     });
   });
 

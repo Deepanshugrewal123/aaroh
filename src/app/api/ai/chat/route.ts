@@ -6,7 +6,7 @@ import {
   generateLocalGroundedResponse,
   AIResponsePayload,
 } from "@/lib/ai-knowledge";
-import { checkRateLimit, checkRateLimitAsync } from "@/lib/rate-limiter";
+import { checkRateLimit, checkRateLimitAsync, extractClientIp } from "@/lib/rate-limiter";
 
 const MAX_MESSAGES_COUNT = 30;
 const MAX_MESSAGE_LENGTH = 2500;
@@ -43,10 +43,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. IP Rate Limiting (Distributed when Upstash Redis configured; in-memory fallback otherwise)
-    const clientIp =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      "anonymous-client";
+    // Secure extraction defends against arbitrary spoofed X-Forwarded-For headers
+    const clientIp = extractClientIp(req.headers, (req as any).ip);
 
     const rateResult = await checkRateLimitAsync(clientIp);
     if (!rateResult.allowed) {
@@ -256,8 +254,8 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json(localPayload);
   } catch (err: unknown) {
-    const safeErrorDiagnostic = err instanceof Error ? err.message : "Internal Server Error";
-    console.error("AI chat route unexpected exception:", safeErrorDiagnostic);
+    const errorType = err instanceof Error ? err.name : "InternalError";
+    console.error("AI chat route unexpected exception:", errorType);
     // Generic error response: never expose raw stack traces, error messages, or internal paths
     return NextResponse.json(
       {

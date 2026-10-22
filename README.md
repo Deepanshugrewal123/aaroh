@@ -13,7 +13,7 @@ Aaroh is a student-first personal career intelligence platform designed to move 
 - **Language:** [TypeScript 5.7](https://www.typescriptlang.org/) in strict mode (`tsc --noEmit`)
 - **Styling:** [Tailwind CSS 3.4](https://tailwindcss.com/) with Midnight Indigo (`#0B1020`), Electric Blue (`#6D8DFF`), and Soft Mint (`#5EEAD4`) design tokens
 - **Icons:** [Lucide React](https://lucide.dev/)
-- **Unit & Integration Testing:** [Vitest 2.1](https://vitest.dev/) (266 tests across 14 test suites)
+- **Unit & Integration Testing:** [Vitest 4.1](https://vitest.dev/) (271 tests across 14 test suites)
 - **Browser E2E Testing:** [Playwright 1.64](https://playwright.dev/) across multi-browser engines (Chromium, Firefox, WebKit; 52 automated assertions per browser across 8 user journeys)
 - **AI & Career Reasoning Engine:** Grounded local-first semantic reasoning engine (`ai-knowledge.ts`) with optional cloud LLM adapters (Gemini 1.5 Flash / OpenAI GPT-4o-mini), explicit user consent enforcement, and offline-only toggle
 - **State Management & Data Portability:** Local-first reactive store with Web Crypto AES-256-GCM password-encrypted backups, safe JSON snapshot export/restore, interactive preview modal, trust clamping, and non-erasure evidence guarantees
@@ -82,11 +82,11 @@ npm run typecheck
 # 2. Run ESLint 9 CLI with Next.js Core Web Vitals (0 warnings)
 npm run lint
 
-# 3. Run all Vitest suites (266 tests across 14 suites)
+# 3. Run all Vitest suites (271 tests across 14 suites)
 npm test
 
 # 4. Or run partitioned test suites:
-npm run test:unit       # 193 core domain, security & data portability unit tests
+npm run test:unit       # 198 core domain, security & data portability unit tests
 npm run test:benchmark  # 73 AI evaluation benchmark & API contract tests
 
 # 5. Build optimized Next.js 15 production bundle (13 static prerendered pages + 1 dynamic API route)
