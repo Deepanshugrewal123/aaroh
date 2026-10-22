@@ -85,91 +85,65 @@ export function getTrustedProxyMode(): TrustedProxyPlatform {
 }
 
 /**
- * Extracts client IP respecting reverse proxy trust boundaries.
+ * Extracts client IP respecting strict reverse proxy trust boundaries.
  *
- * TRUST BOUNDARY & HOSTING ASSUMPTIONS:
- * 1. Runtime Socket IP: If `reqIp` is provided and is a valid IP, it takes precedence. Note that
- *    in standard Next.js 15 App Router standalone Node.js servers, `(req as any).ip` is undefined
- *    because Next.js does not expose raw TCP socket addresses (`net.Socket`) to route handlers.
- * 2. None / Unknown Mode ('none'): When deployed without a verified trusted reverse proxy (the default),
- *    all client-supplied headers (X-Forwarded-For, X-Real-IP, CF-Connecting-IP, etc.) are untrusted.
+ * TRUST BOUNDARY & HOSTING SPECIFICATIONS:
+ * 1. Next.js 15 App Router: Route handlers execute in a web-standards Fetch API abstraction without
+ *    direct access to the underlying Node.js TCP socket (`socket.remoteAddress`). NextRequest does not
+ *    provide a native socket IP by default without platform-level middleware. Client IP attribution relies
+ *    strictly on platform-sanitized reverse proxy headers under the active TRUSTED_PROXY mode.
+ * 2. None / Unknown Mode ('none'): When deployed without a verified trusted reverse proxy (the safe default),
+ *    all client-supplied headers (X-Forwarded-For, X-Real-IP, CF-Connecting-IP, etc.) are treated as untrusted.
  *    Callers share the "anonymous-client" rate limit bucket, preventing header-rotation attacks.
- *    In local development, the 20 req/min limit on "anonymous-client" ensures normal developer usability.
- * 3. Vercel Mode ('vercel'): Vercel's edge network terminates connections and sets `x-real-ip` to the
- *    verified socket IP. Client-supplied `x-real-ip` is stripped by Vercel edge. NOTE: `x-vercel-ip` is
- *    NOT an authentic Vercel header and is strictly rejected.
+ *    In local development, the 20 req/min limit on "anonymous-client" provides full developer usability.
+ * 3. Vercel Mode ('vercel'): Vercel Edge terminates connections, strips client-supplied `x-real-ip`,
+ *    and populates `x-real-ip` with the verified client socket address. If missing or invalid, the handler
+ *    fails closed to "anonymous-client" rather than parsing an untrusted cross-header alternative.
+ *    NOTE: `x-vercel-ip` is NOT an authentic Vercel header and is strictly rejected.
  * 4. Cloudflare Mode ('cloudflare'): `cf-connecting-ip` is trusted ONLY when requests are known to route
- *    through Cloudflare (`TRUSTED_PROXY=cloudflare` or `CF_PAGES=1`). Without a verified Cloudflare
- *    ingress, client-supplied `cf-connecting-ip` headers are rejected.
+ *    through Cloudflare (`TRUSTED_PROXY=cloudflare` or `CF_PAGES=1`). If missing or invalid, fails closed
+ *    to "anonymous-client" rather than falling back to forgeable `X-Forwarded-For`.
  * 5. Custom Mode ('custom'): Behind an operator-managed reverse proxy (NGINX, AWS ALB, Traefik).
  *    OPERATOR REQUIREMENT: The proxy MUST overwrite `X-Real-IP` (e.g. `proxy_set_header X-Real-IP $remote_addr;`)
- *    or sanitize `X-Forwarded-For`, and direct unproxied network access to the Node application port must be denied.
+ *    and block direct unproxied network access to the Node application port. If missing or invalid,
+ *    fails closed to "anonymous-client" rather than falling back to `X-Forwarded-For`.
  */
 export function extractClientIp(
   headers: Headers | { get(name: string): string | null },
-  reqIp?: string | null,
   overrideProxyMode?: TrustedProxyPlatform
 ): string {
   const mode = overrideProxyMode ?? getTrustedProxyMode();
 
-  // 1. Authoritative runtime IP (if populated by platform/middleware)
-  if (reqIp && isValidIp(reqIp)) {
-    return reqIp;
-  }
-
-  // 2. Untrusted / unknown proxy mode: strictly reject client-supplied headers to prevent identity rotation
+  // 1. Untrusted / unknown proxy mode: strictly reject all client-supplied headers
   if (mode === "none") {
     return "anonymous-client";
   }
 
-  // 3. Explicit Cloudflare platform: trust CF-Connecting-IP
+  // 2. Explicit Cloudflare platform: trust CF-Connecting-IP only (no unsafe cross-header fallback)
   if (mode === "cloudflare") {
     const cfIp = headers.get("cf-connecting-ip")?.trim();
     if (cfIp && isValidIp(cfIp)) {
       return cfIp;
     }
-    const xff = headers.get("x-forwarded-for");
-    if (xff) {
-      const clientIp = xff.split(",")[0]?.trim();
-      if (isValidIp(clientIp)) {
-        return clientIp;
-      }
-    }
     return "anonymous-client";
   }
 
-  // 4. Explicit Vercel platform: trust Vercel Edge verified headers (x-real-ip)
+  // 3. Explicit Vercel platform: trust Vercel Edge sanitized x-real-ip only (no unsafe cross-header fallback)
   // NOTE: x-vercel-ip is NOT an authentic Vercel header and is strictly rejected.
   if (mode === "vercel") {
     const realIp = headers.get("x-real-ip")?.trim();
     if (realIp && isValidIp(realIp)) {
       return realIp;
     }
-    const xff = headers.get("x-forwarded-for");
-    if (xff) {
-      const clientIp = xff.split(",")[0]?.trim();
-      if (isValidIp(clientIp)) {
-        return clientIp;
-      }
-    }
     return "anonymous-client";
   }
 
-  // 5. Custom proxy mode:
-  // Requires operator configuration: reverse proxy must overwrite X-Real-IP or X-Forwarded-For
+  // 4. Custom proxy mode: trust operator-overwritten X-Real-IP only (no unsafe cross-header fallback)
+  // Operator requirement: reverse proxy MUST overwrite X-Real-IP and deny direct port access.
   if (mode === "custom") {
     const realIp = headers.get("x-real-ip")?.trim();
     if (realIp && isValidIp(realIp)) {
       return realIp;
-    }
-    const xff = headers.get("x-forwarded-for");
-    if (xff) {
-      const parts = xff.split(",").map((p) => p.trim());
-      for (const part of parts) {
-        if (isValidIp(part)) {
-          return part;
-        }
-      }
     }
     return "anonymous-client";
   }

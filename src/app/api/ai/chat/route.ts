@@ -43,10 +43,11 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. IP Rate Limiting (Distributed when Upstash Redis configured; in-memory fallback otherwise)
-    // NOTE: NextRequest does not expose raw Node TCP socket.remoteAddress in standalone Next.js.
-    // (req as any).ip is only present if populated by Vercel Edge Runtime or upstream middleware.
-    // extractClientIp fails closed to "anonymous-client" in unverified/unknown hosting environments.
-    const clientIp = extractClientIp(req.headers, (req as any).ip);
+    // NOTE: Next.js 15 App Router does not expose the underlying Node TCP socket address (socket.remoteAddress)
+    // to route handlers, nor does NextRequest provide a native socket IP by default without platform middleware.
+    // Client IP attribution relies strictly on reverse proxy headers under the configured TRUSTED_PROXY mode.
+    // When no trusted proxy platform is verified, extractClientIp fails closed to "anonymous-client".
+    const clientIp = extractClientIp(req.headers);
 
     const rateResult = await checkRateLimitAsync(clientIp);
     if (!rateResult.allowed) {
