@@ -122,7 +122,7 @@ export default function AdaptiveRoadmapPage() {
               onClick={toggleExamMode}
               className={`text-xs px-2.5 py-1 rounded-lg border font-semibold transition-colors shrink-0 ${
                 profile.isExamMode
-                  ? "bg-amber-brand text-neutral-950 border-amber-brand font-bold"
+                  ? "bg-amber-brand text-brand-text border-amber-brand font-bold"
                   : "bg-surface-interactive text-text-muted hover:text-text-primary border-border-subtle"
               }`}
             >

@@ -10,7 +10,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading = false, children, disabled, ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]";
+      "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98] cursor-pointer";
 
     const sizeStyles = {
       sm: "text-xs px-3 py-1.5 gap-1.5 font-medium",
@@ -20,7 +20,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary:
-        "bg-brand-primary text-neutral-950 font-bold hover:bg-brand-hover focus-visible:outline-brand-primary shadow-sm hover:shadow-brand-glow",
+        "bg-brand-primary text-brand-text font-bold hover:bg-brand-hover focus-visible:outline-brand-primary shadow-sm hover:shadow-brand-glow",
       secondary:
         "bg-surface-interactive text-text-primary hover:bg-border-medium border border-border-subtle",
       outline:
@@ -28,7 +28,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       ghost:
         "text-text-muted hover:text-text-primary hover:bg-surface-interactive/50",
       mint:
-        "bg-mint-brand text-neutral-950 font-bold hover:bg-mint-hover focus-visible:outline-mint-brand shadow-sm hover:shadow-mint-glow",
+        "bg-mint-brand text-mint-text font-bold hover:bg-mint-hover focus-visible:outline-mint-brand shadow-sm hover:shadow-mint-glow",
       danger:
         "bg-rose-brand/10 text-rose-brand border border-rose-brand/30 hover:bg-rose-brand/20",
     };

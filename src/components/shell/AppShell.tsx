@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -50,7 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile Top Header */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-surface-secondary/90 backdrop-blur-md border-b border-border-subtle sticky top-0 z-30">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-neutral-950 text-sm font-display shadow-sm shadow-brand-glow">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-brand-text text-sm font-display shadow-sm shadow-brand-glow">
             आ
           </div>
           <span className="font-display font-extrabold text-base tracking-tight text-text-primary">
@@ -76,7 +76,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="p-3 bg-surface-secondary rounded-xl flex items-center justify-between">
               <div>
                 <p className="text-xs text-text-muted">Target Career</p>
-                <p className="text-sm font-bold text-text-primary">
+                <p className="text-sm font-bold text-text-primary" suppressHydrationWarning>
                   {targetCareer?.title || "Exploring paths"}
                 </p>
               </div>
@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-brand-primary text-neutral-950 font-semibold"
+                        ? "bg-brand-primary text-brand-text font-semibold"
                         : "text-text-muted hover:text-text-primary hover:bg-surface-interactive"
                     )}
                   >
@@ -117,10 +117,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="text-text-muted">College Exam Mode</span>
               <button
                 onClick={toggleExamMode}
+                suppressHydrationWarning
                 className={cn(
                   "px-2.5 py-1 rounded-md text-xs font-semibold border transition-colors",
                   profile.isExamMode
-                    ? "bg-brand-primary text-neutral-950 border-brand-primary"
+                    ? "bg-brand-primary text-brand-text border-brand-primary"
                     : "bg-surface-interactive text-text-muted border-border-subtle"
                 )}
               >
@@ -136,7 +137,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Brand Header */}
         <div className="p-4 border-b border-border-subtle flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-neutral-950 text-sm font-display shadow-sm shadow-brand-glow group-hover:scale-105 transition-transform">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-brand-text text-sm font-display shadow-sm shadow-brand-glow group-hover:scale-105 transition-transform">
               आ
             </div>
             <div>
@@ -157,10 +158,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span>Target Path</span>
             <span className="w-1.5 h-1.5 rounded-full bg-mint-brand shadow-mint-glow" />
           </div>
-          <p className="text-xs font-bold text-text-primary truncate" title={targetCareer?.title}>
+          <p className="text-xs font-bold text-text-primary truncate" title={targetCareer?.title} suppressHydrationWarning>
             {targetCareer?.title || "Exploring Options"}
           </p>
-          <p className="text-[11px] text-text-muted truncate mt-0.5">
+          <p className="text-[11px] text-text-muted truncate mt-0.5" suppressHydrationWarning>
             {profile.name || "Student Explorer"} • {getDisciplineLabel(profile.discipline).split(" ")[0]}
           </p>
         </div>
@@ -180,14 +181,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all group",
                   isActive
-                    ? "bg-brand-primary text-neutral-950 font-bold shadow-sm shadow-brand-glow"
+                    ? "bg-brand-primary text-brand-text font-bold shadow-sm shadow-brand-glow"
                     : "text-text-muted hover:text-text-primary hover:bg-surface-interactive/60"
                 )}
               >
                 <Icon
                   className={cn(
                     "w-4 h-4 transition-colors",
-                    isActive ? "text-neutral-950" : "text-text-muted group-hover:text-brand-primary"
+                    isActive ? "text-brand-text" : "text-text-muted group-hover:text-brand-primary"
                   )}
                 />
                 <span>{item.title}</span>
@@ -231,6 +232,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </span>
             <button
               onClick={toggleExamMode}
+              suppressHydrationWarning
               className={cn(
                 "relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
                 profile.isExamMode ? "bg-brand-primary" : "bg-surface-interactive"
@@ -238,14 +240,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               aria-label="Toggle exam lighter schedule mode"
             >
               <span
+                suppressHydrationWarning
                 className={cn(
                   "pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white transition duration-200",
-                  profile.isExamMode ? "translate-x-3 bg-neutral-950" : "translate-x-0"
+                  profile.isExamMode ? "translate-x-3 bg-brand-text" : "translate-x-0"
                 )}
               />
             </button>
           </div>
-          <p className="text-[10px] text-text-muted leading-tight">
+          <p className="text-[10px] text-text-muted leading-tight" suppressHydrationWarning>
             {profile.isExamMode ? "3h/wk light plan active. No guilt." : `${profile.weeklyCapacityHours}h/wk standard capacity.`}
           </p>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -108,11 +108,11 @@ export default function DashboardPage() {
                 <Badge variant="mint" className="text-[10px]">Discovery Confirmed</Badge>
               )}
             </div>
-            <h1 className="text-xl sm:text-2xl font-black font-display text-text-primary tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black font-display text-text-primary tracking-tight" suppressHydrationWarning>
               Good to see you, {profile.name || "Explorer"}
             </h1>
             {profile.currentSituation && (
-              <p className="text-xs text-text-muted italic pt-0.5 line-clamp-1">
+              <p className="text-xs text-text-muted italic pt-0.5 line-clamp-1" suppressHydrationWarning>
                 &ldquo;{profile.currentSituation}&rdquo;
               </p>
             )}
@@ -124,9 +124,10 @@ export default function DashboardPage() {
             <span className="text-xs text-text-muted">Exam Mode:</span>
             <button
               onClick={toggleExamMode}
+              suppressHydrationWarning
               className={`text-xs px-2 py-0.5 rounded font-semibold transition-colors ${
                 profile.isExamMode
-                  ? "bg-brand-primary text-neutral-950 shadow-brand-glow"
+                  ? "bg-brand-primary text-brand-text shadow-brand-glow"
                   : "text-text-muted hover:text-text-primary"
               }`}
             >
@@ -139,8 +140,8 @@ export default function DashboardPage() {
         <div className="pt-2 border-t border-border-subtle/70 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2">
             <span className="text-text-muted">Active Target:</span>
-            <span className="font-bold text-text-primary font-display">{targetCareer.title}</span>
-            <span className="text-text-muted">({profile.isExamMode ? "3h/wk light schedule" : `${profile.weeklyCapacityHours}h/wk plan`})</span>
+            <span className="font-bold text-text-primary font-display" suppressHydrationWarning>{targetCareer.title}</span>
+            <span className="text-text-muted" suppressHydrationWarning>({profile.isExamMode ? "3h/wk light schedule" : `${profile.weeklyCapacityHours}h/wk plan`})</span>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/explore" className="text-brand-primary font-medium hover:underline text-xs">
@@ -175,12 +176,10 @@ export default function DashboardPage() {
             placeholder="Ask anything: switching fields, Indian CTC reality, balancing exams, day-in-the-life..."
             className="flex-1 px-3.5 py-2.5 rounded-xl bg-surface-secondary border border-border-medium text-text-primary text-xs focus:outline-none focus:border-brand-primary"
           />
-          <Link href={`/mentor`}>
-            <Button variant="primary" size="sm" type="button" className="shrink-0 rounded-xl">
-              <MessageSquare className="w-3.5 h-3.5 mr-1" />
-              <span>Ask Guide</span>
-            </Button>
-          </Link>
+          <Button variant="primary" size="sm" type="submit" className="shrink-0 rounded-xl">
+            <MessageSquare className="w-3.5 h-3.5 mr-1" />
+            <span>Ask Guide</span>
+          </Button>
         </form>
 
         <div className="flex flex-wrap gap-1.5 pt-1">
@@ -191,7 +190,7 @@ export default function DashboardPage() {
           ].map((prompt, idx) => (
             <Link
               key={idx}
-              href="/mentor"
+              href={`/mentor?q=${encodeURIComponent(prompt)}`}
               className="text-[11px] px-2.5 py-1 rounded-lg bg-surface-secondary text-text-muted hover:text-text-primary border border-border-subtle hover:border-brand-primary/40 transition-colors"
             >
               {prompt}

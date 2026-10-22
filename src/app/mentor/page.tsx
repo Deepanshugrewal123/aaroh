@@ -413,7 +413,7 @@ export default function AIMentorPage() {
                   <div
                     className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                       isUser
-                        ? "bg-brand-primary text-neutral-950 font-medium rounded-tr-sm shadow-brand-glow"
+                        ? "bg-brand-primary text-brand-text font-medium rounded-tr-sm shadow-brand-glow"
                         : "bg-surface-card border border-border-medium text-text-primary rounded-tl-sm shadow-card"
                     }`}
                   >
@@ -430,7 +430,7 @@ export default function AIMentorPage() {
 
                     <div
                       className={`text-[10px] mt-1.5 text-right ${
-                        isUser ? "text-neutral-950/70" : "text-text-muted"
+                        isUser ? "text-brand-text/75" : "text-text-muted"
                       }`}
                     >
                       {m.timestamp}

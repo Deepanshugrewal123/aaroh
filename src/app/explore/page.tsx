@@ -139,7 +139,7 @@ export default function CareerExplorerPage() {
                   onClick={() => setSelectedDiscipline(tab.id)}
                   className={`px-2.5 py-1 rounded-md transition-colors ${
                     selectedDiscipline === tab.id
-                      ? "bg-amber-brand text-neutral-950 font-bold"
+                      ? "bg-amber-brand text-brand-text font-bold"
                       : "bg-surface-secondary text-text-muted hover:text-text-primary border border-border-subtle"
                   }`}
                 >

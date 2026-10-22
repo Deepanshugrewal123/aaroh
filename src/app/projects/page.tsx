@@ -349,7 +349,7 @@ ${proj.testingChecklist.map((t) => `- [ ] ${t}`).join("\n")}
               onClick={() => setIsPublicPortfolio(!isPublicPortfolio)}
               className={`text-xs px-2.5 py-1 rounded-lg border font-semibold transition-colors ${
                 isPublicPortfolio
-                  ? "bg-emerald-brand text-neutral-950 border-emerald-brand font-bold"
+                  ? "bg-emerald-brand text-mint-text border-emerald-brand font-bold"
                   : "bg-surface-interactive text-text-muted hover:text-text-primary border-border-subtle"
               }`}
             >
@@ -364,7 +364,7 @@ ${proj.testingChecklist.map((t) => `- [ ] ${t}`).join("\n")}
             onClick={() => setActiveFilter("all")}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
               activeFilter === "all"
-                ? "bg-amber-brand text-neutral-950 font-bold"
+                ? "bg-amber-brand text-brand-text font-bold"
                 : "text-text-muted hover:text-text-primary"
             }`}
           >
@@ -375,7 +375,7 @@ ${proj.testingChecklist.map((t) => `- [ ] ${t}`).join("\n")}
               onClick={() => setActiveFilter("target")}
               className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
                 activeFilter === "target"
-                  ? "bg-amber-brand text-neutral-950 font-bold"
+                  ? "bg-amber-brand text-brand-text font-bold"
                   : "text-text-muted hover:text-text-primary"
               }`}
             >
@@ -1033,7 +1033,7 @@ ${proj.testingChecklist.map((t) => `- [ ] ${t}`).join("\n")}
                   onClick={() => { setReviewTab("export"); setImportResult(null); }}
                   className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
                     reviewTab === "export"
-                      ? "bg-amber-brand text-neutral-950 font-bold"
+                      ? "bg-amber-brand text-brand-text font-bold"
                       : "text-text-muted hover:text-text-primary bg-surface-secondary"
                   }`}
                 >
@@ -1043,7 +1043,7 @@ ${proj.testingChecklist.map((t) => `- [ ] ${t}`).join("\n")}
                   onClick={() => { setReviewTab("import"); setImportResult(null); }}
                   className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
                     reviewTab === "import"
-                      ? "bg-amber-brand text-neutral-950 font-bold"
+                      ? "bg-amber-brand text-brand-text font-bold"
                       : "text-text-muted hover:text-text-primary bg-surface-secondary"
                   }`}
                 >
@@ -1053,7 +1053,7 @@ ${proj.testingChecklist.map((t) => `- [ ] ${t}`).join("\n")}
                   onClick={() => { setReviewTab("conduct"); setImportResult(null); }}
                   className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
                     reviewTab === "conduct"
-                      ? "bg-amber-brand text-neutral-950 font-bold"
+                      ? "bg-amber-brand text-brand-text font-bold"
                       : "text-text-muted hover:text-text-primary bg-surface-secondary"
                   }`}
                 >
@@ -1253,7 +1253,7 @@ ${proj.testingChecklist.map((t) => `- [ ] ${t}`).join("\n")}
                           onClick={() => setOverallDecision("approved")}
                           className={`flex-1 py-1.5 rounded-xl border text-xs font-bold transition-colors ${
                             overallDecision === "approved"
-                              ? "bg-emerald-brand text-neutral-950 border-emerald-brand"
+                              ? "bg-emerald-brand text-mint-text border-emerald-brand"
                               : "bg-surface-secondary text-text-muted border-border-subtle"
                           }`}
                         >
@@ -1264,7 +1264,7 @@ ${proj.testingChecklist.map((t) => `- [ ] ${t}`).join("\n")}
                           onClick={() => setOverallDecision("changes_requested")}
                           className={`flex-1 py-1.5 rounded-xl border text-xs font-bold transition-colors ${
                             overallDecision === "changes_requested"
-                              ? "bg-amber-brand text-neutral-950 border-amber-brand"
+                              ? "bg-amber-brand text-brand-text border-amber-brand"
                               : "bg-surface-secondary text-text-muted border-border-subtle"
                           }`}
                         >

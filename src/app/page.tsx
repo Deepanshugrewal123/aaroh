@@ -30,7 +30,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 bg-canvas/90 backdrop-blur-md border-b border-border-subtle">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-neutral-950 font-display shadow-sm shadow-brand-glow">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-brand-text font-display shadow-sm shadow-brand-glow">
               आ
             </div>
             <div className="flex flex-col">

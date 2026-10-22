@@ -221,7 +221,7 @@ export default function OnboardingPage() {
       {/* Top Header */}
       <div className="max-w-2xl w-full mx-auto flex items-center justify-between pb-4">
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-neutral-950 font-display shadow-sm shadow-brand-glow">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-brand-text font-display shadow-sm shadow-brand-glow">
             आ
           </div>
           <div>
@@ -385,7 +385,7 @@ export default function OnboardingPage() {
                 >
                   <div
                     className={`w-5 h-5 rounded-md flex items-center justify-center mt-0.5 border ${
-                      isCompleteBeginner ? "bg-mint-brand border-mint-brand text-neutral-950 font-bold" : "border-border-medium"
+                      isCompleteBeginner ? "bg-mint-brand border-mint-brand text-mint-text font-bold" : "border-border-medium"
                     }`}
                   >
                     {isCompleteBeginner && <CheckCircle2 className="w-4 h-4" />}
@@ -513,7 +513,7 @@ export default function OnboardingPage() {
                           onClick={() => toggleInterest(tag)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                             isSelected
-                              ? "bg-brand-primary text-neutral-950 font-bold border-brand-primary shadow-brand-glow"
+                              ? "bg-brand-primary text-brand-text font-bold border-brand-primary shadow-brand-glow"
                               : "bg-surface-secondary border-border-subtle text-text-muted hover:text-text-primary hover:border-border-medium"
                           }`}
                         >
@@ -620,7 +620,7 @@ export default function OnboardingPage() {
                       onClick={() => setIsExamModeAware(!isExamModeAware)}
                       className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
                         isExamModeAware
-                          ? "bg-brand-primary text-neutral-950 border-brand-primary shadow-brand-glow"
+                          ? "bg-brand-primary text-brand-text border-brand-primary shadow-brand-glow"
                           : "bg-surface-interactive border-border-subtle text-text-muted hover:text-text-primary"
                       }`}
                     >
@@ -676,7 +676,7 @@ export default function OnboardingPage() {
                     >
                       <div
                         className={`w-4 h-4 rounded mt-0.5 flex items-center justify-center border shrink-0 ${
-                          isChecked ? "bg-mint-brand border-mint-brand text-neutral-950 font-bold" : "border-border-medium"
+                          isChecked ? "bg-mint-brand border-mint-brand text-mint-text font-bold" : "border-border-medium"
                         }`}
                       >
                         {isChecked && <CheckCircle2 className="w-3.5 h-3.5" />}

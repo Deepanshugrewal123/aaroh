@@ -1,13 +1,20 @@
 import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === "production";
+const isDev = process.env.NODE_ENV === "development";
+
+// In development mode, Next.js fast refresh and source maps require 'unsafe-eval'.
+// In production builds and automated test runs, 'unsafe-eval' is omitted to enforce strict CSP execution boundaries.
+const scriptSrc = isDev
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+  : "script-src 'self' 'unsafe-inline'";
 
 const securityHeaders = [
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      scriptSrc,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",

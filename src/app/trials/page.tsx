@@ -210,13 +210,13 @@ function TrialWorkspaceContent() {
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-all flex items-center gap-1.5 shrink-0 ${
                 isSelected
-                  ? "bg-amber-brand text-neutral-950 border-amber-brand shadow-sm font-bold"
+                  ? "bg-amber-brand text-brand-text border-amber-brand shadow-sm font-bold"
                   : "bg-surface-secondary text-text-muted border-border-subtle hover:text-text-primary hover:border-border-medium"
               }`}
             >
               <span>{shortTitle}</span>
               {hasDone && (
-                <span className={`text-[10px] ${isSelected ? "text-neutral-950 font-black" : "text-emerald-400"}`}>
+                <span className={`text-[10px] ${isSelected ? "text-brand-text font-black" : "text-emerald-400"}`}>
                   ✓ Done
                 </span>
               )}
@@ -553,7 +553,7 @@ function TrialWorkspaceContent() {
                       onClick={() => handleRatingChange(num)}
                       className={`w-9 h-9 rounded-lg border text-xs font-bold transition-all ${
                         enjoymentRating === num
-                          ? "bg-amber-brand text-neutral-950 border-amber-brand shadow-sm"
+                          ? "bg-amber-brand text-brand-text border-amber-brand shadow-sm"
                           : "bg-surface-card text-text-muted border-border-subtle hover:text-text-primary"
                       }`}
                     >

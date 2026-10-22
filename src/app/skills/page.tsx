@@ -123,7 +123,7 @@ export default function SkillIntelligencePage() {
             onClick={() => setActiveCategory("target")}
             className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
               activeCategory === "target"
-                ? "bg-amber-brand text-neutral-950"
+                ? "bg-amber-brand text-brand-text"
                 : "text-text-muted hover:text-text-primary"
             }`}
           >
@@ -133,7 +133,7 @@ export default function SkillIntelligencePage() {
             onClick={() => setActiveCategory("all")}
             className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
               activeCategory === "all"
-                ? "bg-amber-brand text-neutral-950"
+                ? "bg-amber-brand text-brand-text"
                 : "text-text-muted hover:text-text-primary"
             }`}
           >
