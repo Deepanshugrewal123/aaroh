@@ -43,51 +43,114 @@ export function isValidIp(ip: string): boolean {
   return ipv6Regex.test(ip);
 }
 
+export type TrustedProxyPlatform = "vercel" | "cloudflare" | "custom" | "none" | "auto";
+
 /**
- * Extracts client IP respecting reverse proxy conventions.
+ * Determines active trusted proxy configuration based on environment variables.
+ */
+export function getTrustedProxyMode(): TrustedProxyPlatform {
+  const envVal = process.env.TRUSTED_PROXY?.toLowerCase().trim();
+  if (envVal === "none" || envVal === "false") {
+    return "none";
+  }
+  if (envVal === "vercel") {
+    return "vercel";
+  }
+  if (envVal === "cloudflare") {
+    return "cloudflare";
+  }
+  if (envVal === "custom" || envVal === "true" || envVal === "1") {
+    return "custom";
+  }
+  // Auto-detection based on host platform signals:
+  if (process.env.VERCEL === "1") {
+    return "vercel";
+  }
+  if (process.env.CF_PAGES === "1") {
+    return "cloudflare";
+  }
+  return "auto";
+}
+
+/**
+ * Extracts client IP respecting reverse proxy trust boundaries.
  *
  * TRUST BOUNDARY & HOSTING ASSUMPTIONS:
- * 1. On platforms like Vercel or Cloudflare, edge proxies populate `req.ip`, `x-vercel-ip`, or `cf-connecting-ip`.
- * 2. When relying on `x-forwarded-for`, the function inspects the rightmost valid IP, assuming a trusted
- *    reverse proxy appends the connecting client IP.
- * 3. IMPORTANT: In environments without a trusted reverse proxy (e.g. direct internet exposure of the Node process),
- *    clients can forge any HTTP header including X-Forwarded-For. True IP attribution requires network-level
- *    socket inspection (`socket.remoteAddress`) or a configured trusted proxy edge.
+ * 1. Vercel: Vercel's edge network terminates connections and sets `x-real-ip` to the verified socket IP.
+ *    Client-supplied `x-real-ip` is stripped by Vercel edge. NOTE: `x-vercel-ip` is NOT an authentic Vercel
+ *    header and is never trusted.
+ * 2. Cloudflare: `cf-connecting-ip` is trusted ONLY when requests are known to route through Cloudflare
+ *    (`TRUSTED_PROXY=cloudflare` or `CF_PAGES=1`). Without a verified Cloudflare boundary, client-supplied
+ *    `cf-connecting-ip` headers are rejected to prevent rate-limit evasion.
+ * 3. None / Untrusted (`TRUSTED_PROXY=none`): When exposed directly without a trusted reverse proxy,
+ *    all client-supplied headers (X-Forwarded-For, X-Real-IP) are untrusted. Requests without a native
+ *    runtime socket IP fall back to "anonymous-client" to prevent header rotation attacks.
+ * 4. Auto / Custom: Behind a trusted reverse proxy, `x-real-ip` or the verified client IP from `x-forwarded-for`
+ *    is parsed. Multi-hop chains do not blindly trust arbitrary entries.
  */
 export function extractClientIp(
   headers: Headers | { get(name: string): string | null },
-  reqIp?: string | null
+  reqIp?: string | null,
+  overrideProxyMode?: TrustedProxyPlatform
 ): string {
-  // 1. Next.js runtime IP (populated by Vercel / trusted reverse proxy)
+  const mode = overrideProxyMode ?? getTrustedProxyMode();
+
+  // 1. Authoritative runtime IP (Next.js req.ip set directly by server runtime)
   if (reqIp && isValidIp(reqIp)) {
     return reqIp;
   }
 
-  // 2. Platform-verified headers (cannot be forged by clients if terminated by proxy)
-  const vercelIp = headers.get("x-vercel-ip")?.trim();
-  if (vercelIp && isValidIp(vercelIp)) {
-    return vercelIp;
+  // 2. Untrusted proxy mode: strictly reject client-supplied headers to prevent identity rotation
+  if (mode === "none") {
+    return "anonymous-client";
   }
 
-  const cfIp = headers.get("cf-connecting-ip")?.trim();
-  if (cfIp && isValidIp(cfIp)) {
-    return cfIp;
+  // 3. Explicit Cloudflare platform: trust CF-Connecting-IP
+  if (mode === "cloudflare") {
+    const cfIp = headers.get("cf-connecting-ip")?.trim();
+    if (cfIp && isValidIp(cfIp)) {
+      return cfIp;
+    }
   }
 
+  // 4. Explicit Vercel platform: trust Vercel Edge verified headers (x-real-ip)
+  // NOTE: x-vercel-ip is NOT an authentic Vercel header and is strictly rejected.
+  if (mode === "vercel") {
+    const realIp = headers.get("x-real-ip")?.trim();
+    if (realIp && isValidIp(realIp)) {
+      return realIp;
+    }
+    const xff = headers.get("x-forwarded-for");
+    if (xff) {
+      const clientIp = xff.split(",")[0]?.trim();
+      if (isValidIp(clientIp)) {
+        return clientIp;
+      }
+    }
+  }
+
+  // 5. Default / Auto / Custom proxy mode:
+  // Check x-real-ip first (standard reverse proxy header set by NGINX / ALB)
   const realIp = headers.get("x-real-ip")?.trim();
   if (realIp && isValidIp(realIp)) {
     return realIp;
   }
 
-  // 3. X-Forwarded-For: Client can spoof the leftmost IP, but each trusted proxy appends
-  // the connecting client IP to the right. Therefore, the rightmost valid entry represents
-  // the real IP seen by the closest trusted reverse proxy.
+  // Check cf-connecting-ip ONLY if Cloudflare Pages or Cloudflare env is active
+  if (process.env.CF_PAGES === "1") {
+    const cfIp = headers.get("cf-connecting-ip")?.trim();
+    if (cfIp && isValidIp(cfIp)) {
+      return cfIp;
+    }
+  }
+
+  // X-Forwarded-For fallback (extract first valid IP in forward chain)
   const xForwardedFor = headers.get("x-forwarded-for");
   if (xForwardedFor) {
     const parts = xForwardedFor.split(",").map((p) => p.trim());
-    for (let i = parts.length - 1; i >= 0; i--) {
-      if (isValidIp(parts[i])) {
-        return parts[i];
+    for (const part of parts) {
+      if (isValidIp(part)) {
+        return part;
       }
     }
   }

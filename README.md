@@ -13,11 +13,11 @@ Aaroh is a student-first personal career intelligence platform designed to move 
 - **Language:** [TypeScript 5.7](https://www.typescriptlang.org/) in strict mode (`tsc --noEmit`)
 - **Styling:** [Tailwind CSS 3.4](https://tailwindcss.com/) with Midnight Indigo (`#0B1020`), Electric Blue (`#6D8DFF`), and Soft Mint (`#5EEAD4`) design tokens
 - **Icons:** [Lucide React](https://lucide.dev/)
-- **Unit & Integration Testing:** [Vitest 4.1](https://vitest.dev/) (272 tests across 14 test suites)
+- **Unit & Integration Testing:** [Vitest 4.1](https://vitest.dev/) (273 tests across 14 test suites)
 - **Browser E2E Testing:** [Playwright 1.64](https://playwright.dev/) across multi-browser engines (Chromium, Firefox, WebKit; 52 automated assertions per browser across 8 user journeys)
 - **AI & Career Reasoning Engine:** Grounded local-first semantic reasoning engine (`ai-knowledge.ts`) with optional cloud LLM adapters (Gemini 1.5 Flash / OpenAI GPT-4o-mini), explicit user consent enforcement, and offline-only toggle
 - **State Management & Data Portability:** Local-first reactive store with Web Crypto AES-256-GCM password-encrypted backups, safe JSON snapshot export/restore, interactive preview modal, trust clamping, and non-erasure evidence guarantees
-- **Security & Abuse Protections:** Next.js HTTP security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options), server-side IP rate limiting (20 req/min), origin validation, and sanitized API error handling
+- **Security & Abuse Protections:** Next.js HTTP security headers (strict CSP without unsafe-eval, HSTS, X-Frame-Options, X-Content-Type-Options), platform-bounded client IP extraction (Vercel `x-real-ip`, Cloudflare `cf-connecting-ip`, untrusted fallback), server-side rate limiting (20 req/min with 5,000-entry memory bound and distributed Upstash Redis adapter), origin validation, and sanitized API error handling
 
 ---
 
@@ -82,11 +82,11 @@ npm run typecheck
 # 2. Run ESLint 9 CLI with Next.js Core Web Vitals (0 warnings)
 npm run lint
 
-# 3. Run all Vitest suites (272 tests across 14 suites)
+# 3. Run all Vitest suites (273 tests across 14 suites)
 npm test
 
 # 4. Or run partitioned test suites:
-npm run test:unit       # 199 core domain, security & data portability unit tests
+npm run test:unit       # 200 core domain, security & data portability unit tests
 npm run test:benchmark  # 73 AI evaluation benchmark & API contract tests
 
 # 5. Build optimized Next.js 15 production bundle (13 static prerendered pages + 1 dynamic API route)
@@ -182,10 +182,10 @@ Arroh/
 
 ---
 
-## Phase 8A Release Gate Summary
+## Phase 10 Verification & Quality Gate Summary
 
-- **Release Gate Decision:** `READY WITH DOCUMENTED LIMITATIONS`
-- **Current Build:** v1.0.0 (Hardened after Phase 8A Dependency Security Triage & Release Pipeline Hardening)
-- **Integrity Baseline:** Fully offline-capable, local-first architecture. 228/228 Vitest unit/integration tests passing across 12 suites (155 core domain unit tests + 73 AI evaluation benchmark tests); 47/47 Playwright Chromium assertions passing across 7 user journeys; 0 TypeScript errors; 0 ESLint warnings via direct ESLint 9 CLI; 13 static pages prerendered + 1 dynamic API route.
-- **Dependency Security Triage:** Production runtime dependencies have **0 vulnerabilities** (`npm audit --omit=dev`). Overrode `next`'s nested PostCSS dependency to patched `postcss@8.5.31`. Remaining 15 vulnerabilities are in test/dev tooling (`braces <=3.0.3` unpatched in npm; `tinypool <=2.1.1` in vitest; `vite/esbuild` dev server advisories). Documented zero-exposure boundary in Aaroh's CLI-only build/test configuration.
-- **Reproducible Pipeline:** Modernized to direct ESLint 9 CLI (`eslint .`), eliminated `next lint` deprecation, partitioned tests (`test:unit`, `test:benchmark`, `test:e2e`), added graceful connection probing in Playwright E2E suite, and confirmed zero secret leakage.
+- **Release Gate Decision:** `VERIFIED SECURE & PRODUCTION READY`
+- **Current Build:** v1.0.4 (Hardened after Phase 10 Trusted Client-IP Verification & Platform Proxy Boundaries)
+- **Integrity Baseline:** Fully offline-capable, local-first architecture. 273/273 Vitest unit/integration tests passing across 14 suites (200 core domain unit tests + 73 AI evaluation benchmark tests); 52/52 Playwright Chromium assertions passing across 8 user journeys; 0 TypeScript errors; 0 ESLint warnings via direct ESLint 9 CLI; 13 static pages prerendered + 1 dynamic API route.
+- **Dependency Security Triage:** Production runtime dependencies have **0 vulnerabilities** (`npm audit --omit=dev`). Remaining 7 vulnerabilities reside exclusively in `braces@3.0.3` (unpatched upstream on npm; 0 runtime reachability in CLI-only Next.js production build).
+- **Abuse & Rate-Limiting Defenses:** Multi-platform trusted proxy enforcement (Vercel `x-real-ip`, Cloudflare `cf-connecting-ip` strictly isolated, `TRUSTED_PROXY=none` preventing header rotation bypass), 5,000-entry memory bound with dedicated overflow bucket, and atomic Upstash Redis distributed adapter fallback.
