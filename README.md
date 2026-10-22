@@ -13,10 +13,11 @@ Aaroh is a student-first personal career intelligence platform designed to move 
 - **Language:** [TypeScript 5.7](https://www.typescriptlang.org/) in strict mode (`tsc --noEmit`)
 - **Styling:** [Tailwind CSS 3.4](https://tailwindcss.com/) with Midnight Indigo (`#0B1020`), Electric Blue (`#6D8DFF`), and Soft Mint (`#5EEAD4`) design tokens
 - **Icons:** [Lucide React](https://lucide.dev/)
-- **Unit & Integration Testing:** [Vitest 2.1](https://vitest.dev/) (250 tests across 13 test suites)
+- **Unit & Integration Testing:** [Vitest 2.1](https://vitest.dev/) (263 tests across 14 test suites)
 - **Browser E2E Testing:** [Playwright 1.64](https://playwright.dev/) across multi-browser engines (Chromium, Firefox, WebKit; 52 automated assertions per browser across 8 user journeys)
-- **AI & Career Reasoning Engine:** Grounded local-first semantic reasoning engine (`ai-knowledge.ts`) with optional cloud LLM adapters (Gemini 1.5 Flash / OpenAI GPT-4o-mini)
-- **State Management & Data Portability:** Local-first reactive store with safe JSON backup snapshot export and schema-validated restore, interactive preview modal, trust clamping, and non-erasure evidence guarantees
+- **AI & Career Reasoning Engine:** Grounded local-first semantic reasoning engine (`ai-knowledge.ts`) with optional cloud LLM adapters (Gemini 1.5 Flash / OpenAI GPT-4o-mini), explicit user consent enforcement, and offline-only toggle
+- **State Management & Data Portability:** Local-first reactive store with Web Crypto AES-256-GCM password-encrypted backups, safe JSON snapshot export/restore, interactive preview modal, trust clamping, and non-erasure evidence guarantees
+- **Security & Abuse Protections:** Next.js HTTP security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options), server-side IP rate limiting (20 req/min), origin validation, and sanitized API error handling
 
 ---
 
@@ -62,11 +63,11 @@ flowchart TD
    - Indian career landscape grounding (realistic entry-level base take-home pay, Tier 2/3 transitions, prompt injection defenses).
    - Strict evidence boundaries: prevents conversational skill elevation or roadmap completion tampering.
    - Privacy transparency: defaults to local browser reasoning; discloses external transmission when cloud API keys are enabled.
-8. **Student Data Portability & Safe Restore (`/dashboard`):**
-   - Single-click export of complete student profile, micro-trials, project submissions, peer/mentor reviews, and roadmap as standard `aaroh-backup-[slug]-[date].json`.
-   - Safe client-side restore pipeline: pre-flight schema validation, 2MB size limit, prototype pollution rejection, and interactive preview modal before modifying local state.
+8. **Student Data Portability, Encrypted Backups & Safe Restore (`/dashboard`):**
+   - Single-click export of complete student progress either as **Password-Protected Encrypted Backups** (AES-256-GCM via browser Web Crypto API) or plain JSON.
+   - Safe client-side restore pipeline: pre-flight schema validation, 2MB size limit, prototype pollution rejection, interactive preview modal, and decrypt-on-import before modifying local state.
+   - Shared-device data protection: 1-click **Wipe Local Data** action to safely clear student data on shared college library computers.
    - Evidence integrity guarantees: clamps unverified institutional claims to honest unauthenticated levels, verifies SHA-256 fingerprints, marks modified submissions as stale, and enforces strict non-erasure protection over pre-existing verified credentials.
-   - Transparent disclosure: clearly informs students that backups are plain-text unencrypted JSON.
 
 ---
 
@@ -81,11 +82,11 @@ npm run typecheck
 # 2. Run ESLint 9 CLI with Next.js Core Web Vitals (0 warnings)
 npm run lint
 
-# 3. Run all Vitest suites (250 tests across 13 suites)
+# 3. Run all Vitest suites (263 tests across 14 suites)
 npm test
 
 # 4. Or run partitioned test suites:
-npm run test:unit       # 177 core domain & data portability unit tests
+npm run test:unit       # 190 core domain, security & data portability unit tests
 npm run test:benchmark  # 73 AI evaluation benchmark & API contract tests
 
 # 5. Build optimized Next.js 15 production bundle (13 static prerendered pages + 1 dynamic API route)

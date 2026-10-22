@@ -6,19 +6,83 @@ import {
   generateLocalGroundedResponse,
   AIResponsePayload,
 } from "@/lib/ai-knowledge";
+import { checkRateLimit } from "@/lib/rate-limiter";
 
 const MAX_MESSAGES_COUNT = 30;
 const MAX_MESSAGE_LENGTH = 2500;
+const MAX_BODY_BYTES = 50 * 1024; // 50KB payload threshold
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { messages, profile } = body as {
+    // 1. Origin verification for browser callers
+    const origin = req.headers.get("origin");
+    const host = req.headers.get("host");
+
+    if (origin) {
+      try {
+        const originUrl = new URL(origin);
+        const isLocal =
+          originUrl.hostname === "localhost" ||
+          originUrl.hostname === "127.0.0.1" ||
+          originUrl.hostname === "0.0.0.0";
+        const isHostMatch =
+          host && (originUrl.host === host || originUrl.hostname === host.split(":")[0]);
+
+        if (!isLocal && !isHostMatch) {
+          return NextResponse.json(
+            { error: "Forbidden: cross-origin request rejected." },
+            { status: 403 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Forbidden: invalid origin header." },
+          { status: 403 }
+        );
+      }
+    }
+
+    // 2. In-memory IP Rate Limiting (20 requests per minute per identifier)
+    const clientIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "anonymous-client";
+
+    const rateResult = checkRateLimit(clientIp);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment before sending another message." },
+        { status: 429, headers: { "Retry-After": String(rateResult.retryAfterSeconds || 60) } }
+      );
+    }
+
+    // 3. Request body size check & safe JSON parse
+    const rawBodyText = await req.text();
+    if (rawBodyText.length > MAX_BODY_BYTES) {
+      return NextResponse.json(
+        { error: "Payload too large: request body exceeds 50KB limit." },
+        { status: 413 }
+      );
+    }
+
+    let body: any;
+    try {
+      body = JSON.parse(rawBodyText);
+    } catch {
+      return NextResponse.json(
+        { error: "Malformed request: invalid JSON body." },
+        { status: 400 }
+      );
+    }
+
+    const { messages, profile, offlineOnly, cloudConsentGranted } = body as {
       messages: ChatMessage[];
       profile: UserProfile;
+      offlineOnly?: boolean;
+      cloudConsentGranted?: boolean;
     };
 
-    // 1. Validate messages input
+    // 4. Validate messages input
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
         { error: "Invalid request: messages array is required." },
@@ -49,7 +113,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. Sanitize and extract only authorized profile context (prevent untrusted state pollution)
+    // 5. Sanitize and extract only authorized profile context (prevent untrusted state pollution)
     const rawProfile = profile || ({} as Partial<UserProfile>);
     const safeProfile: UserProfile = {
       id: typeof rawProfile.id === "string" ? rawProfile.id.slice(0, 50) : "guest-fallback",
@@ -79,8 +143,15 @@ export async function POST(req: NextRequest) {
     const geminiKey = process.env.GEMINI_API_KEY;
     const openAiKey = process.env.OPENAI_API_KEY;
 
-    // 3. Try Gemini if configured
-    if (geminiKey) {
+    // 6. Explicit Cloud AI Policy Enforcement:
+    // Cloud LLM is ONLY contacted if:
+    // a) User has NOT enabled offline-only mode
+    // b) User has granted explicit informed consent (cloudConsentGranted === true)
+    // c) Server has a configured API key
+    const isCloudAllowed = !offlineOnly && cloudConsentGranted === true;
+
+    // 7. Try Gemini if configured and explicitly consented
+    if (isCloudAllowed && geminiKey) {
       try {
         const systemPrompt = buildGroundedSystemPrompt(safeProfile);
         const contents = [
@@ -91,10 +162,14 @@ export async function POST(req: NextRequest) {
           })),
         ];
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+        // Pass API key via header 'x-goog-api-key' rather than query parameter to prevent URL leakage
+        const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
         const geminiRes = await fetch(geminiUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": geminiKey,
+          },
           body: JSON.stringify({ contents }),
           signal: AbortSignal.timeout(10000),
         });
@@ -118,15 +193,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(payload);
           }
         } else {
-          console.warn("Gemini API call returned non-200 status:", geminiRes.status);
+          console.warn("Gemini API call returned non-200 status code");
         }
       } catch (geminiError: any) {
-        console.warn("Gemini call error or timeout; seamlessly falling back to local engine:", geminiError?.message || geminiError);
+        console.warn("Gemini call error or timeout; seamlessly falling back to local engine:", geminiError?.message ? "Upstream network failure" : "Unknown network error");
       }
     }
 
-    // 4. Try OpenAI if configured
-    if (openAiKey) {
+    // 8. Try OpenAI if configured and explicitly consented
+    if (isCloudAllowed && openAiKey) {
       try {
         const systemPrompt = buildGroundedSystemPrompt(safeProfile);
         const openAiMessages = [
@@ -166,26 +241,27 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(payload);
           }
         } else {
-          console.warn("OpenAI API call returned non-200 status:", openAiRes.status);
+          console.warn("OpenAI API call returned non-200 status code");
         }
       } catch (openAiError: any) {
-        console.warn("OpenAI call error or timeout; seamlessly falling back to local engine:", openAiError?.message || openAiError);
+        console.warn("OpenAI call error or timeout; seamlessly falling back to local engine:", openAiError?.message ? "Upstream network failure" : "Unknown network error");
       }
     }
 
-    // 5. Fallback: Local Grounded Intelligence Engine (Deterministic, transparent, honest)
+    // 9. Fallback / Default: Local Grounded Intelligence Engine (Deterministic, transparent, honest)
     const localPayload = generateLocalGroundedResponse(messages, safeProfile);
-    if (geminiKey || openAiKey) {
+    if (isCloudAllowed && (geminiKey || openAiKey)) {
       localPayload.groundingNotice =
         "Cloud model connection timed out or unavailable. Seamlessly fell back to Aaroh's grounded local reasoning engine.";
     }
     return NextResponse.json(localPayload);
-  } catch (err: any) {
-    console.error("AI chat route unexpected exception:", err);
+  } catch (err: unknown) {
+    const safeErrorDiagnostic = err instanceof Error ? err.message : "Internal Server Error";
+    console.error("AI chat route unexpected exception:", safeErrorDiagnostic);
+    // Generic error response: never expose raw stack traces, error messages, or internal paths
     return NextResponse.json(
       {
-        error: "Internal server error processing career intelligence query.",
-        details: err?.message || String(err),
+        error: "An unexpected error occurred while processing your query. Please try again.",
       },
       { status: 500 }
     );

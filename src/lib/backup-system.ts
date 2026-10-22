@@ -13,8 +13,9 @@ import {
 import { computeSubmissionFingerprint, LOCAL_REVIEW_DISCLOSURE } from "./review-system";
 
 export const BACKUP_FORMAT_ID = "aaroh_student_data_backup" as const;
+export const BACKUP_FORMAT_ENCRYPTED = "aaroh_student_data_encrypted_backup_v1" as const;
 export const BACKUP_SCHEMA_VERSION = "1.0" as const;
-export const CURRENT_APP_VERSION = "1.0.3";
+export const CURRENT_APP_VERSION = "1.0.4";
 export const MAX_BACKUP_SIZE_BYTES = 2 * 1024 * 1024; // 2MB safety threshold
 
 export const VALID_DISCIPLINES: readonly EducationalDiscipline[] = [
@@ -81,8 +82,29 @@ export interface AarohBackupPacket {
   securityNotice: string;
 }
 
+export interface AarohEncryptedBackupPacket {
+  formatId: typeof BACKUP_FORMAT_ENCRYPTED;
+  schemaVersion: typeof BACKUP_SCHEMA_VERSION;
+  appVersion: string;
+  exportedAt: string;
+  kdf: {
+    algorithm: "PBKDF2";
+    hash: "SHA-256";
+    iterations: number;
+    saltHex: string;
+  };
+  encryption: {
+    algorithm: "AES-GCM";
+    ivHex: string;
+  };
+  ciphertextHex: string;
+  summary?: BackupPreviewSummary;
+  securityNotice: string;
+}
+
 export interface BackupValidationResult {
   isValid: boolean;
+  isEncrypted?: boolean;
   error?: string;
   sanitizedBackup?: AarohBackupPacket;
   summary?: BackupPreviewSummary;
@@ -205,6 +227,183 @@ export function generateBackupFilename(profile: UserProfile): string {
 }
 
 /**
+ * Converts a Uint8Array buffer into a lowercase hexadecimal string.
+ */
+export function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/**
+ * Converts a valid hexadecimal string into a Uint8Array buffer.
+ */
+export function hexToBytes(hex: string): Uint8Array {
+  if (hex.length % 2 !== 0) {
+    throw new Error("Invalid hex string length");
+  }
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
+}
+
+/**
+ * Generates an encrypted backup file name.
+ */
+export function generateEncryptedBackupFilename(profile: UserProfile): string {
+  const sanitizedName = (profile.name || "aaroh-student")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const dateStr = new Date().toISOString().split("T")[0];
+  return `aaroh-backup-encrypted-${sanitizedName || "student"}-${dateStr}.json`;
+}
+
+/**
+ * Encrypts an Aaroh backup packet using Web Crypto API (PBKDF2-derived 256-bit AES-GCM).
+ */
+export async function encryptStudentBackup(
+  backupPacket: AarohBackupPacket,
+  password: string
+): Promise<AarohEncryptedBackupPacket> {
+  if (!password || password.length < 6) {
+    throw new Error("Password must be at least 6 characters long for secure backup encryption.");
+  }
+
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) {
+    throw new Error("Web Crypto API is unavailable in this environment.");
+  }
+
+  const encoder = new TextEncoder();
+  const passwordBytes = encoder.encode(password);
+
+  const salt = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(salt);
+
+  const baseKey = await subtle.importKey(
+    "raw",
+    passwordBytes as unknown as BufferSource,
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  const derivedKey = await subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: salt as unknown as BufferSource,
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    baseKey,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt"]
+  );
+
+  const iv = new Uint8Array(12);
+  globalThis.crypto.getRandomValues(iv);
+
+  const plaintextBytes = encoder.encode(JSON.stringify(backupPacket));
+  const ciphertextBuffer = await subtle.encrypt(
+    { name: "AES-GCM", iv: iv as unknown as BufferSource },
+    derivedKey,
+    plaintextBytes as unknown as BufferSource
+  );
+
+  return {
+    formatId: BACKUP_FORMAT_ENCRYPTED,
+    schemaVersion: BACKUP_SCHEMA_VERSION,
+    appVersion: CURRENT_APP_VERSION,
+    exportedAt: new Date().toISOString(),
+    kdf: {
+      algorithm: "PBKDF2",
+      hash: "SHA-256",
+      iterations: 100000,
+      saltHex: bytesToHex(salt),
+    },
+    encryption: {
+      algorithm: "AES-GCM",
+      ivHex: bytesToHex(iv),
+    },
+    ciphertextHex: bytesToHex(new Uint8Array(ciphertextBuffer)),
+    summary: backupPacket.summary,
+    securityNotice:
+      "Aaroh password-encrypted backup packet (AES-256-GCM). Keep your password safe; it cannot be recovered if lost.",
+  };
+}
+
+/**
+ * Decrypts and parses a password-encrypted Aaroh backup packet.
+ */
+export async function decryptStudentBackup(
+  encryptedPacket: AarohEncryptedBackupPacket,
+  password: string
+): Promise<AarohBackupPacket> {
+  if (!password) {
+    throw new Error("Password is required to decrypt this backup.");
+  }
+
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) {
+    throw new Error("Web Crypto API is unavailable in this environment.");
+  }
+
+  if (encryptedPacket.formatId !== BACKUP_FORMAT_ENCRYPTED) {
+    throw new Error("Invalid format: expected encrypted Aaroh backup packet.");
+  }
+
+  try {
+    const salt = hexToBytes(encryptedPacket.kdf.saltHex);
+    const iv = hexToBytes(encryptedPacket.encryption.ivHex);
+    const ciphertext = hexToBytes(encryptedPacket.ciphertextHex);
+
+    const encoder = new TextEncoder();
+    const baseKey = await subtle.importKey(
+      "raw",
+      encoder.encode(password) as unknown as BufferSource,
+      { name: "PBKDF2" },
+      false,
+      ["deriveKey"]
+    );
+
+    const derivedKey = await subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: salt as unknown as BufferSource,
+        iterations: encryptedPacket.kdf.iterations || 100000,
+        hash: "SHA-256",
+      },
+      baseKey,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["decrypt"]
+    );
+
+    const decryptedBuffer = await subtle.decrypt(
+      { name: "AES-GCM", iv: iv as unknown as BufferSource },
+      derivedKey,
+      ciphertext as unknown as BufferSource
+    );
+
+    const decoder = new TextDecoder();
+    const decryptedJson = decoder.decode(decryptedBuffer);
+    const parsedPacket = JSON.parse(decryptedJson) as AarohBackupPacket;
+
+    if (parsedPacket.formatId !== BACKUP_FORMAT_ID) {
+      throw new Error("Decrypted data is not a valid Aaroh student data packet.");
+    }
+
+    return parsedPacket;
+  } catch (err: unknown) {
+    throw new Error("Incorrect password or corrupted backup file.");
+  }
+}
+
+/**
  * Detects dangerous prototype pollution keys (__proto__, constructor, prototype) recursively.
  */
 export function containsPrototypePollution(obj: unknown, depth = 0): boolean {
@@ -315,6 +514,17 @@ export function validateAndParseBackup(
       isValid: false,
       error: "Invalid backup format: root element must be a valid JSON object.",
       securityNotices,
+      stalenessNotices,
+    };
+  }
+
+  if (parsed.formatId === BACKUP_FORMAT_ENCRYPTED) {
+    return {
+      isValid: false,
+      isEncrypted: true,
+      summary: parsed.summary,
+      error: "This backup file is password-encrypted. Please enter your password to unlock it.",
+      securityNotices: ["Encrypted AES-GCM (256-bit) backup packet detected."],
       stalenessNotices,
     };
   }

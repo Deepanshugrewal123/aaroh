@@ -23,6 +23,7 @@ import {
 import { AppShell } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { Modal } from "@/components/ui/Modal";
 import { useAarohStore } from "@/lib/store";
 import { CAREERS_CATALOG } from "@/lib/careers-data";
 import { MentorMessage } from "@/lib/types";
@@ -55,6 +56,9 @@ export default function AIMentorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
   const [showContextDetails, setShowContextDetails] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [offlineOnly, setOfflineOnly] = useState(false);
+  const [cloudConsentGranted, setCloudConsentGranted] = useState(false);
   const [providerStatus, setProviderStatus] = useState<string>("Grounded Local Engine (Offline)");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -65,19 +69,29 @@ export default function AIMentorPage() {
     CAREERS_CATALOG.find((c) => c.slug === "full-stack-systems-engineer") ||
     CAREERS_CATALOG[0];
 
-  // Hydrate conversation from session storage or incoming URL search query
+  // Hydrate conversation and privacy settings from storage
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const stored = sessionStorage.getItem("aaroh_mentor_chat_v1");
-      if (stored) {
-        const parsed = JSON.parse(stored);
+      const storedChat = sessionStorage.getItem("aaroh_mentor_chat_v1");
+      if (storedChat) {
+        const parsed = JSON.parse(storedChat);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setMessages(parsed);
         }
       }
+
+      const storedOffline = localStorage.getItem("aaroh_mentor_offline_only");
+      if (storedOffline !== null) {
+        setOfflineOnly(storedOffline === "true");
+      }
+
+      const storedConsent = localStorage.getItem("aaroh_cloud_ai_consent");
+      if (storedConsent === "granted") {
+        setCloudConsentGranted(true);
+      }
     } catch (e) {
-      console.warn("Failed to load chat from session storage:", e);
+      console.warn("Failed to load mentor state from storage:", e);
     }
 
     const params = new URLSearchParams(window.location.search);
@@ -88,6 +102,20 @@ export default function AIMentorPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleUpdatePrivacySettings = (isOffline: boolean, consentGranted: boolean) => {
+    setOfflineOnly(isOffline);
+    setCloudConsentGranted(consentGranted);
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("aaroh_mentor_offline_only", String(isOffline));
+        localStorage.setItem("aaroh_cloud_ai_consent", consentGranted ? "granted" : "revoked");
+      }
+    } catch (e) {
+      console.warn("Failed to persist privacy settings:", e);
+    }
+    setShowPrivacyModal(false);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -140,6 +168,8 @@ export default function AIMentorPage() {
         body: JSON.stringify({
           messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
           profile,
+          offlineOnly,
+          cloudConsentGranted,
         }),
       });
 
@@ -151,6 +181,10 @@ export default function AIMentorPage() {
 
       if (data.provider === "cloud_llm") {
         setProviderStatus("Cloud LLM (Live)");
+      } else if (offlineOnly) {
+        setProviderStatus("Local Engine (Offline Enforced)");
+      } else if (!cloudConsentGranted) {
+        setProviderStatus("Local Engine (No Cloud Consent)");
       } else if (data.groundingNotice && data.groundingNotice.includes("timed out or unavailable")) {
         setProviderStatus("Local Fallback (Cloud Timed Out)");
       } else {
@@ -217,6 +251,14 @@ export default function AIMentorPage() {
               {providerStatus}
             </Badge>
             <button
+              onClick={() => setShowPrivacyModal(true)}
+              title="AI Privacy and Cloud Data Sharing Controls"
+              className="p-1.5 rounded-lg bg-surface-secondary border border-border-subtle text-text-muted hover:text-text-primary transition-colors text-xs flex items-center gap-1"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-brand-primary" />
+              <span className="hidden sm:inline">AI Privacy</span>
+            </button>
+            <button
               onClick={handleClearChat}
               title="Reset conversation"
               className="p-1.5 rounded-lg bg-surface-secondary border border-border-subtle text-text-muted hover:text-text-primary transition-colors text-xs flex items-center gap-1"
@@ -226,6 +268,74 @@ export default function AIMentorPage() {
             </button>
           </div>
         </div>
+
+        {/* AI Privacy & Consent Modal */}
+        <Modal
+          isOpen={showPrivacyModal}
+          onClose={() => setShowPrivacyModal(false)}
+          title="AI Privacy & Cloud Data Sharing"
+          description="Control whether your career intelligence queries remain 100% on-device or connect to cloud models."
+          maxWidth="md"
+        >
+          <div className="space-y-4 text-xs text-text-muted">
+            <div className="p-3 rounded-xl bg-surface-secondary/60 border border-border-subtle space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-text-primary">Current Active Mode:</span>
+                <Badge variant={offlineOnly ? "mint" : cloudConsentGranted ? "primary" : "amber"}>
+                  {offlineOnly
+                    ? "100% Offline (Enforced)"
+                    : cloudConsentGranted
+                    ? "Cloud AI Permitted"
+                    : "Offline (Consent Required)"}
+                </Badge>
+              </div>
+              <p className="text-[11px] leading-relaxed">
+                By default, Aaroh uses an offline deterministic semantic engine. No prompts, profile records, or reflections are ever transmitted to any external server.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-3 rounded-xl border border-border-subtle bg-surface-card space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-text-primary">Mode A: 100% Offline Local Engine (Recommended)</span>
+                </div>
+                <p className="text-[11px] text-text-muted leading-relaxed">
+                  Queries are matched and synthesized locally using Aaroh&apos;s verified Indian tech and career catalog. Zero external API calls, zero tracking, zero data transmission.
+                </p>
+                <Button
+                  size="sm"
+                  variant={offlineOnly ? "primary" : "outline"}
+                  onClick={() => handleUpdatePrivacySettings(true, false)}
+                  className="w-full mt-2"
+                >
+                  {offlineOnly ? "✓ Active: Enforce Offline Mode" : "Select 100% Offline Mode"}
+                </Button>
+              </div>
+
+              <div className="p-3 rounded-xl border border-border-subtle bg-surface-card space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-text-primary">Mode B: Cloud AI (Google Gemini / OpenAI)</span>
+                </div>
+                <p className="text-[11px] text-text-muted leading-relaxed">
+                  Requires server API keys. Transmits your message and student context (name, stage, discipline, situation) over HTTPS to Google or OpenAI for open-ended synthesis.
+                </p>
+                <Button
+                  size="sm"
+                  variant={!offlineOnly && cloudConsentGranted ? "primary" : "outline"}
+                  onClick={() => handleUpdatePrivacySettings(false, true)}
+                  className="w-full mt-2"
+                >
+                  {!offlineOnly && cloudConsentGranted ? "✓ Active: Cloud AI Permitted" : "Grant Consent & Enable Cloud AI"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="text-[11px] text-text-muted border-t border-border-subtle pt-3">
+              <span className="font-semibold text-text-primary">Informed Consent Notice: </span>
+              Aaroh does not share your data with advertisers or data brokers. You can withdraw consent or switch back to 100% offline mode at any time.
+            </div>
+          </div>
+        </Modal>
 
         {/* Student Context Disclosure Banner */}
         <div className="p-3 rounded-xl bg-surface-card border border-border-subtle text-xs space-y-2 shadow-card">

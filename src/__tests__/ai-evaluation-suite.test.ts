@@ -142,6 +142,7 @@ describe("Phase 5B: Next.js API Route (/api/ai/chat) & Provider Contracts", () =
       body: JSON.stringify({
         messages: [{ role: "user", content: "What should I focus on this week?" }],
         profile: EMPTY_PROFILE,
+        cloudConsentGranted: true,
       }),
     });
 
@@ -177,6 +178,7 @@ describe("Phase 5B: Next.js API Route (/api/ai/chat) & Provider Contracts", () =
       body: JSON.stringify({
         messages: [{ role: "user", content: "What is my next step?" }],
         profile: EMPTY_PROFILE,
+        cloudConsentGranted: true,
       }),
     });
 
@@ -202,6 +204,7 @@ describe("Phase 5B: Next.js API Route (/api/ai/chat) & Provider Contracts", () =
       body: JSON.stringify({
         messages: [{ role: "user", content: "What are the 7 career disciplines?" }],
         profile: EMPTY_PROFILE,
+        cloudConsentGranted: true,
       }),
     });
 
