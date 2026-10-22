@@ -19,7 +19,8 @@ interface RateLimitRecord {
 }
 
 const localRateLimitMap = new Map<string, RateLimitRecord>();
-const MAX_MAP_SIZE_BEFORE_PRUNING = 5000;
+export const MAX_RATE_LIMIT_ENTRIES = 5000;
+export const OVERFLOW_CLIENT_KEY = "__rate_limit_overflow__";
 export const DEFAULT_RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 export const DEFAULT_MAX_REQUESTS_PER_WINDOW = 20;
 
@@ -43,8 +44,15 @@ export function isValidIp(ip: string): boolean {
 }
 
 /**
- * Securely extracts client IP respecting trusted proxy architecture.
- * Prevents spoofing via arbitrary client-controlled X-Forwarded-For headers.
+ * Extracts client IP respecting reverse proxy conventions.
+ *
+ * TRUST BOUNDARY & HOSTING ASSUMPTIONS:
+ * 1. On platforms like Vercel or Cloudflare, edge proxies populate `req.ip`, `x-vercel-ip`, or `cf-connecting-ip`.
+ * 2. When relying on `x-forwarded-for`, the function inspects the rightmost valid IP, assuming a trusted
+ *    reverse proxy appends the connecting client IP.
+ * 3. IMPORTANT: In environments without a trusted reverse proxy (e.g. direct internet exposure of the Node process),
+ *    clients can forge any HTTP header including X-Forwarded-For. True IP attribution requires network-level
+ *    socket inspection (`socket.remoteAddress`) or a configured trusted proxy edge.
  */
 export function extractClientIp(
   headers: Headers | { get(name: string): string | null },
@@ -88,14 +96,25 @@ export function extractClientIp(
 }
 
 /**
- * Prunes expired entries from local in-memory map to prevent unbounded memory growth.
+ * Prunes expired entries from local in-memory map to free capacity.
+ * Returns the count of deleted entries.
  */
-function pruneExpiredLocalRecords(now: number): void {
+export function pruneExpiredLocalRecords(now: number = Date.now()): number {
+  let prunedCount = 0;
   for (const [key, record] of localRateLimitMap.entries()) {
     if (record.resetAt <= now) {
       localRateLimitMap.delete(key);
+      prunedCount++;
     }
   }
+  return prunedCount;
+}
+
+/**
+ * Returns current size of local in-memory rate limit map (for telemetry and testing).
+ */
+export function getLocalRateLimitMapSize(): number {
+  return localRateLimitMap.size;
 }
 
 /**
@@ -136,32 +155,92 @@ export function getRateLimiterBackendStatus(): {
 /**
  * Synchronous local in-memory sliding window rate limiter.
  * Protects against rapid repeated calls within a single process.
+ *
+ * MEMORY SAFETY & CAPACITY POLICY:
+ * - Hard bound of exactly MAX_RATE_LIMIT_ENTRIES (5,000 entries).
+ * - Up to 4,999 individual unexpired clients receive dedicated tracking entries.
+ * - If 5,000+ distinct unexpired clients arrive, excess clients are routed to a shared
+ *   overflow record (OVERFLOW_CLIENT_KEY) rather than evicting existing entries (which would
+ *   allow attackers to reset legitimate rate limits) or growing unboundedly (OOM crash).
+ * - The overflow bucket enforces `maxRequests` globally across excess callers, preventing fail-open.
  */
 export function checkRateLimit(
   clientIdentifier: string,
   maxRequests: number = DEFAULT_MAX_REQUESTS_PER_WINDOW,
   windowMs: number = DEFAULT_RATE_LIMIT_WINDOW_MS
-): { allowed: boolean; retryAfterSeconds?: number; backend: string } {
+): { allowed: boolean; retryAfterSeconds?: number; backend: string; overflow?: boolean } {
   const now = Date.now();
 
-  // Guard against unbounded memory consumption
-  if (localRateLimitMap.size > MAX_MAP_SIZE_BEFORE_PRUNING) {
-    pruneExpiredLocalRecords(now);
-  }
-
-  const record = localRateLimitMap.get(clientIdentifier);
-
-  if (record && record.resetAt > now) {
-    if (record.count >= maxRequests) {
-      const retryAfterSeconds = Math.ceil((record.resetAt - now) / 1000);
-      return { allowed: false, retryAfterSeconds, backend: "in-memory-fallback" };
+  // 1. Existing client: update in-place without altering map size
+  const existingRecord = localRateLimitMap.get(clientIdentifier);
+  if (existingRecord) {
+    if (existingRecord.resetAt > now) {
+      if (existingRecord.count >= maxRequests) {
+        const retryAfterSeconds = Math.ceil((existingRecord.resetAt - now) / 1000);
+        return { allowed: false, retryAfterSeconds, backend: "in-memory-fallback" };
+      }
+      existingRecord.count += 1;
+      return { allowed: true, backend: "in-memory-fallback" };
     }
-    record.count += 1;
+    // Existing record has expired: reset count in-place
+    existingRecord.count = 1;
+    existingRecord.resetAt = now + windowMs;
     return { allowed: true, backend: "in-memory-fallback" };
   }
 
-  localRateLimitMap.set(clientIdentifier, { count: 1, resetAt: now + windowMs });
-  return { allowed: true, backend: "in-memory-fallback" };
+  // 2. New client: if at or approaching capacity, prune expired records first
+  if (localRateLimitMap.size >= MAX_RATE_LIMIT_ENTRIES - 1) {
+    pruneExpiredLocalRecords(now);
+  }
+
+  // 3. If there is space below capacity threshold, register this client
+  // (Reserves 1 slot for OVERFLOW_CLIENT_KEY so total map size never exceeds MAX_RATE_LIMIT_ENTRIES)
+  if (localRateLimitMap.size < MAX_RATE_LIMIT_ENTRIES - 1) {
+    localRateLimitMap.set(clientIdentifier, { count: 1, resetAt: now + windowMs });
+    return { allowed: true, backend: "in-memory-fallback" };
+  }
+
+  // 4. HARD CAPACITY LIMIT ENFORCEMENT:
+  // The map has reached 4,999 distinct unexpired clients. To prevent memory exhaustion (DoS)
+  // while avoiding destructive LRU/FIFO eviction (which would allow attackers to flush and reset
+  // existing rate limits), all new distinct clients are routed to the shared overflow bucket.
+  // This guarantees the map NEVER exceeds MAX_RATE_LIMIT_ENTRIES (5,000 total).
+  const overflowRecord = localRateLimitMap.get(OVERFLOW_CLIENT_KEY);
+  if (overflowRecord) {
+    if (overflowRecord.resetAt > now) {
+      if (overflowRecord.count >= maxRequests) {
+        const retryAfterSeconds = Math.ceil((overflowRecord.resetAt - now) / 1000);
+        return {
+          allowed: false,
+          retryAfterSeconds,
+          backend: "in-memory-fallback",
+          overflow: true,
+        };
+      }
+      overflowRecord.count += 1;
+      return {
+        allowed: true,
+        backend: "in-memory-fallback",
+        overflow: true,
+      };
+    }
+    // Overflow bucket expired: reset in place
+    overflowRecord.count = 1;
+    overflowRecord.resetAt = now + windowMs;
+    return {
+      allowed: true,
+      backend: "in-memory-fallback",
+      overflow: true,
+    };
+  }
+
+  // Initialize the overflow slot (5,000th entry)
+  localRateLimitMap.set(OVERFLOW_CLIENT_KEY, { count: 1, resetAt: now + windowMs });
+  return {
+    allowed: true,
+    backend: "in-memory-fallback",
+    overflow: true,
+  };
 }
 
 /**

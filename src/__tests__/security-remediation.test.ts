@@ -8,6 +8,10 @@ import {
   resetRateLimitsForTesting,
   isValidIp,
   extractClientIp,
+  MAX_RATE_LIMIT_ENTRIES,
+  OVERFLOW_CLIENT_KEY,
+  getLocalRateLimitMapSize,
+  pruneExpiredLocalRecords,
 } from "@/lib/rate-limiter";
 import {
   createStudentBackupSnapshot,
@@ -338,6 +342,66 @@ describe("Phase 10: Complete Security Remediation & Privacy Verification", () =>
       expect(isValidIp("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe(true);
       expect(isValidIp("not-an-ip-address")).toBe(false);
       expect(isValidIp("999.999.999.999")).toBe(false);
+    });
+
+    it("Enforces a strict 5,000 entry hard cap when more than 5,000 distinct unexpired clients send requests", () => {
+      resetRateLimitsForTesting();
+      expect(getLocalRateLimitMapSize()).toBe(0);
+
+      // 1. Create 4,999 distinct unexpired clients (occupies all dedicated slots)
+      for (let i = 0; i < 4999; i++) {
+        const res = checkRateLimit(`client-${i}`);
+        expect(res.allowed).toBe(true);
+        expect(res.overflow).toBeUndefined();
+      }
+      expect(getLocalRateLimitMapSize()).toBe(4999);
+
+      // 2. The 5,000th distinct client routes to the overflow slot
+      const res5000 = checkRateLimit("client-5000");
+      expect(res5000.allowed).toBe(true);
+      expect(res5000.overflow).toBe(true);
+      expect(getLocalRateLimitMapSize()).toBe(MAX_RATE_LIMIT_ENTRIES); // Exactly 5,000
+
+      // 3. Flood with an additional 500 distinct unexpired clients (total 5,501 clients attempted)
+      for (let i = 5001; i <= 5500; i++) {
+        checkRateLimit(`client-${i}`);
+      }
+
+      // 4. CRITICAL INVARIANT: Map size NEVER exceeds MAX_RATE_LIMIT_ENTRIES (5,000)
+      expect(getLocalRateLimitMapSize()).toBe(MAX_RATE_LIMIT_ENTRIES);
+
+      // 5. Overflow bucket rate limiting: excess unmapped clients do NOT bypass limits
+      // Since the overflow bucket already received 501 calls (> default 20), subsequent overflow calls are BLOCKED
+      const blockedOverflow = checkRateLimit("client-excess-unmapped");
+      expect(blockedOverflow.allowed).toBe(false);
+      expect(blockedOverflow.retryAfterSeconds).toBeGreaterThan(0);
+      expect(blockedOverflow.overflow).toBe(true);
+
+      // 6. Ordinary clients created within the initial 4,999 retain expected behavior and are NOT evicted
+      const existingClient = checkRateLimit("client-42");
+      expect(existingClient.allowed).toBe(true); // second call for client-42
+      expect(existingClient.overflow).toBeUndefined();
+
+      // Exhaust client-42 up to the 20 request limit
+      for (let i = 2; i < 20; i++) {
+        checkRateLimit("client-42");
+      }
+      const blockedClient42 = checkRateLimit("client-42");
+      expect(blockedClient42.allowed).toBe(false); // 21st call is blocked
+
+      // 7. Verify map size remained strictly 5,000 throughout
+      expect(getLocalRateLimitMapSize()).toBe(MAX_RATE_LIMIT_ENTRIES);
+
+      // 8. Expired records can be cleaned up, freeing capacity for new individual clients
+      const pruned = pruneExpiredLocalRecords(Date.now() + 61000);
+      expect(pruned).toBe(MAX_RATE_LIMIT_ENTRIES);
+      expect(getLocalRateLimitMapSize()).toBe(0);
+
+      // After pruning, new unique clients can once again obtain dedicated slots
+      const freshClient = checkRateLimit("fresh-client-after-prune");
+      expect(freshClient.allowed).toBe(true);
+      expect(freshClient.overflow).toBeUndefined();
+      expect(getLocalRateLimitMapSize()).toBe(1);
     });
   });
 
