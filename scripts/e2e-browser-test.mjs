@@ -521,10 +521,12 @@ async function runBrowserJourneySuite(browserType, browserName) {
     await pageH.waitForSelector("text=Student Data Portability & Backup");
     await pageH.waitForSelector("text=Local-First Storage Notice");
 
-    // 2. Export Backup
+    // 2. Export Backup (Opens Export Modal, then triggers download)
+    await pageH.click('button:has-text("Export Backup")');
+    await pageH.waitForSelector("text=Export Student Progress Backup");
     const [download] = await Promise.all([
       pageH.waitForEvent("download"),
-      pageH.click('button:has-text("Export Backup")'),
+      pageH.click('button:has-text("Download Plaintext Backup")'),
     ]);
     const suggestedFilename = download.suggestedFilename();
     if (!suggestedFilename.startsWith("aaroh-backup-") || !suggestedFilename.endsWith(".json")) {

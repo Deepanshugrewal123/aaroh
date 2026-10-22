@@ -378,6 +378,9 @@ describe("Phase 10: Complete Security Remediation & Privacy Verification", () =>
       expect(headerMap.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
       expect(headerMap.get("Content-Security-Policy")).toContain("default-src 'self'");
       expect(headerMap.get("Content-Security-Policy")).toContain("frame-ancestors 'none'");
+      // TIGHTENED CSP: Ensure 'unsafe-eval' is eliminated to prevent dynamic code injection
+      expect(headerMap.get("Content-Security-Policy")).not.toContain("'unsafe-eval'");
+      expect(headerMap.get("Content-Security-Policy")).toContain("script-src 'self' 'unsafe-inline'");
       expect(headerMap.get("Permissions-Policy")).toContain("camera=()");
     });
   });

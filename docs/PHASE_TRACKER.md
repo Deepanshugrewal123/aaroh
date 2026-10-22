@@ -37,6 +37,7 @@
   - Production runtime dependencies have **0 vulnerabilities** (`npm audit --omit=dev`). Remaining 12 vulnerabilities reside exclusively in devDependencies (`braces` unpatched upstream in npm, Vitest UI server advisory not used in headless CLI mode, and dev-only vite/esbuild).
   - Distributed Rate Limiting: Implemented Upstash Redis REST pipeline rate limiting adapter with automatic fallback to local sliding-window limiter. Transparent status `UNCONFIGURED_MISSING_CREDENTIALS` is exposed when Redis credentials are unconfigured. Distributed rate limiting is explicitly marked unverified at runtime due to absence of production Redis infrastructure.
   - API Protection: Direct API callers (without `Origin` header) are bounded by 20 req/min rate limit and 50KB payload guard.
+  - Production CSP Hardening: Tightened Content-Security-Policy by removing `'unsafe-eval'` from `script-src`, eliminating dynamic code injection vectors while verifying full compatibility with Next.js client hydration and Playwright browser journeys (52/52 checks passed).
   - Offline Isolation: AI endpoint and UI strictly respect offline toggle and deny cloud LLM invocation without explicit consent.
   - Verification: 266/266 Vitest unit, benchmark, and security regression tests passing across 14 suites. TypeScript and ESLint 0 errors, Next.js 15 production build clean.
 
