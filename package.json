@@ -1,15 +1,24 @@
 {
   "name": "aaroh",
-  "version": "0.1.0",
+  "version": "1.0.3",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "node scripts/e2e-browser-test.mjs"
+    "test:unit": "vitest run --exclude src/__tests__/ai-evaluation-suite.test.ts",
+    "test:benchmark": "vitest run src/__tests__/ai-evaluation-suite.test.ts",
+    "test:e2e": "node scripts/e2e-browser-test.mjs",
+    "test:e2e:chromium": "node scripts/e2e-browser-test.mjs --browser=chromium",
+    "test:e2e:firefox": "node scripts/e2e-browser-test.mjs --browser=firefox",
+    "test:e2e:webkit": "node scripts/e2e-browser-test.mjs --browser=webkit",
+    "test:e2e:all": "node scripts/e2e-browser-test.mjs --browser=all",
+    "audit:prod": "npm audit --omit=dev",
+    "audit:dev": "npm audit",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run build && npm run test:e2e && npm run audit:prod"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -31,5 +40,8 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
+  },
+  "overrides": {
+    "postcss": "$postcss"
   }
 }

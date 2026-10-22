@@ -4,25 +4,27 @@
 
 @layer base {
   :root {
-    --canvas: #F8F9FA;
-    --surface-secondary: #F1F3F5;
+    --canvas: #F4F6FB;
+    --surface-secondary: #EBF0F8;
     --surface-card: #FFFFFF;
-    --surface-interactive: #E9ECEF;
-    --border-subtle: #DEE2E6;
-    --border-medium: #CED4DA;
-    --text-primary: #181A1D;
-    --text-muted: #5C626A;
+    --surface-interactive: #DFE7F4;
+    --border-subtle: #D6DFEE;
+    --border-medium: #CBD5E1;
+    --text-primary: #0F172A;
+    --text-secondary: #334155;
+    --text-muted: #64748B;
   }
 
   .dark {
-    --canvas: #101113;
-    --surface-secondary: #15171A;
-    --surface-card: #1B1E22;
-    --surface-interactive: #22262B;
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-medium: rgba(255, 255, 255, 0.16);
-    --text-primary: #F8F9FA;
-    --text-muted: #9CA3AF;
+    --canvas: #0B1020;
+    --surface-secondary: #111A2E;
+    --surface-card: #172238;
+    --surface-interactive: #1E2B45;
+    --border-subtle: #1F2D48;
+    --border-medium: #293750;
+    --text-primary: #F3F6FC;
+    --text-secondary: #A7B4CA;
+    --text-muted: #77869F;
   }
 
   * {
@@ -47,11 +49,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(150, 150, 150, 0.25);
+  background: rgba(109, 141, 255, 0.25);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(150, 150, 150, 0.4);
+  background: rgba(109, 141, 255, 0.45);
 }
 
 /* Restrained transitions */
@@ -61,6 +63,6 @@ button, a, input, select, textarea {
 
 /* Focus styles */
 :focus-visible {
-  outline: 2px solid #F59E0B;
+  outline: 2px solid #6D8DFF;
   outline-offset: 2px;
 }

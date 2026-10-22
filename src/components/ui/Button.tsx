@@ -2,7 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "mint";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
 }
@@ -10,23 +10,25 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading = false, children, disabled, ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]";
+      "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]";
 
     const sizeStyles = {
       sm: "text-xs px-3 py-1.5 gap-1.5 font-medium",
-      md: "text-sm px-4 py-2 gap-2 font-medium",
-      lg: "text-base px-6 py-3 gap-2.5 font-semibold",
+      md: "text-sm px-4 py-2.5 gap-2 font-semibold",
+      lg: "text-base px-6 py-3 gap-2.5 font-bold",
     };
 
     const variantStyles = {
       primary:
-        "bg-amber-brand text-neutral-950 hover:bg-amber-hover focus-visible:outline-amber-brand shadow-sm font-semibold",
+        "bg-brand-primary text-neutral-950 font-bold hover:bg-brand-hover focus-visible:outline-brand-primary shadow-sm hover:shadow-brand-glow",
       secondary:
         "bg-surface-interactive text-text-primary hover:bg-border-medium border border-border-subtle",
       outline:
-        "border border-border-medium text-text-primary hover:bg-surface-interactive/60 hover:border-amber-brand/40",
+        "border border-border-medium text-text-primary hover:bg-surface-interactive/60 hover:border-brand-primary/40",
       ghost:
         "text-text-muted hover:text-text-primary hover:bg-surface-interactive/50",
+      mint:
+        "bg-mint-brand text-neutral-950 font-bold hover:bg-mint-hover focus-visible:outline-mint-brand shadow-sm hover:shadow-mint-glow",
       danger:
         "bg-rose-brand/10 text-rose-brand border border-rose-brand/30 hover:bg-rose-brand/20",
     };

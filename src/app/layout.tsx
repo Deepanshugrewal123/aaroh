@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${manrope.variable} font-sans antialiased selection:bg-amber-brand/20 selection:text-amber-300`}>
+      <body className={`${inter.variable} ${manrope.variable} font-sans antialiased selection:bg-brand-primary/25 selection:text-brand-primary`}>
         {children}
       </body>
     </html>

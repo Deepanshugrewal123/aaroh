@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
   Sparkles,
@@ -12,13 +12,19 @@ import {
   Bot,
   User,
   HelpCircle,
+  Clock,
+  Compass,
+  Layers,
+  Zap,
+  Calendar,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { AppShell } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useAarohStore } from "@/lib/store";
 import { CAREERS_CATALOG } from "@/lib/careers-data";
-import { SKILLS_CATALOG } from "@/lib/skills-data";
 import { MentorMessage } from "@/lib/types";
 import { getDisciplineLabel } from "@/lib/utils";
 
@@ -26,12 +32,17 @@ const INITIAL_MESSAGES: MentorMessage[] = [
   {
     id: "msg-welcome",
     role: "assistant",
-    content: "Hi there! I am your Aaroh Career Intelligence Guide. Ask me anything about career options, what people in these roles actually do, how to bridge skill gaps, or how to calibrate your weekly schedule. I don't give generic motivational quotes or false salary promises—we explore grounded facts and practical next steps.",
+    content: `Hi there! I am your Aaroh Career Intelligence Guide.
+
+Ask me anything about career options in India, day-to-day realities, transitioning across disciplines, bridging skill gaps, or protecting your schedule during exams.
+
+I don't give generic motivational quotes or inflated salary claims. We focus on grounded facts, honest trade-offs, and practical proof of work.`,
     timestamp: "Just now",
     suggestedFollowUps: [
       "Why is my current target career recommended for me?",
-      "What is the single most important skill gap I should tackle first?",
-      "How does Exam Mode protect my schedule during midterms?",
+      "Can I switch from my college stream to software or UX?",
+      "What do entry-level roles in India actually pay?",
+      "How do I balance semester exams with portfolio projects?",
     ],
   },
 ];
@@ -41,14 +52,74 @@ export default function AIMentorPage() {
 
   const [messages, setMessages] = useState<MentorMessage[]>(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [showContextDisclosure, setShowContextDisclosure] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorNotice, setErrorNotice] = useState<string | null>(null);
+  const [showContextDetails, setShowContextDetails] = useState(false);
+  const [providerStatus, setProviderStatus] = useState<string>("Grounded Local Engine (Offline)");
 
-  const targetCareer = CAREERS_CATALOG.find((c) => c.slug === profile.targetCareerSlug) || CAREERS_CATALOG[2];
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSendMessage = (textToSend?: string) => {
-    const text = textToSend || inputText;
-    if (!text.trim()) return;
+  const targetCareer =
+    CAREERS_CATALOG.find((c) => c.slug === profile.targetCareerSlug) ||
+    CAREERS_CATALOG.find((c) => c.slug === "full-stack-systems-engineer") ||
+    CAREERS_CATALOG[0];
+
+  // Hydrate conversation from session storage or incoming URL search query
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = sessionStorage.getItem("aaroh_mentor_chat_v1");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load chat from session storage:", e);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const initialQuery = params.get("q");
+    if (initialQuery && initialQuery.trim()) {
+      handleSendMessage(initialQuery.trim());
+      window.history.replaceState({}, "", "/mentor");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
+
+  const updateAndPersistMessages = (newMsgs: MentorMessage[]) => {
+    setMessages(newMsgs);
+    try {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("aaroh_mentor_chat_v1", JSON.stringify(newMsgs));
+      }
+    } catch (e) {
+      console.warn("Failed to persist messages:", e);
+    }
+  };
+
+  const handleClearChat = () => {
+    updateAndPersistMessages(INITIAL_MESSAGES);
+    try {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("aaroh_mentor_chat_v1");
+      }
+    } catch (e) {
+      console.warn("Failed to clear session storage:", e);
+    }
+  };
+
+  const handleSendMessage = async (textToSend?: string) => {
+    const text = (textToSend || inputText).trim();
+    if (!text || isLoading) return;
+
+    setErrorNotice(null);
 
     const userMsg: MentorMessage = {
       id: `msg-${Date.now()}`,
@@ -57,186 +128,302 @@ export default function AIMentorPage() {
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const newMessages = [...messages, userMsg];
+    updateAndPersistMessages(newMessages);
     setInputText("");
-    setIsTyping(true);
+    setIsLoading(true);
 
-    // Fast, deterministic contextual reply engine
-    setTimeout(() => {
-      let replyContent = "";
-      let followUps: string[] = [];
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
+          profile,
+        }),
+      });
 
-      const lower = text.toLowerCase();
-      if (lower.includes("why") || lower.includes("recommended") || lower.includes("fit")) {
-        replyContent = `Here is why **${targetCareer.title}** was suggested as a starting hypothesis:
-• Your Field: Aligned with your background in ${getDisciplineLabel(profile.discipline)}.
-• Your Working Style: Matches your interest in ${profile.selectedWorkStyles.join(" and ")} problem-solving.
-• Unassessed Areas: You still have skills in this domain that haven't been evaluated yet. This is why we treat it as an exploratory hypothesis rather than an absolute prediction. Testing it in the 12-minute micro-trial is the best next step!`;
-        followUps = ["Take me to the micro-trial", "Show me the skill requirements"];
-      } else if (lower.includes("skill") || lower.includes("gap") || lower.includes("tackle")) {
-        const topReq = targetCareer.skillsRequired.find(
-          (r) => !profile.skillEvidence[r.skillId] || profile.skillEvidence[r.skillId].state === "not_assessed"
-        ) || targetCareer.skillsRequired[0];
-        const skillName = SKILLS_CATALOG[topReq.skillId]?.name || topReq.skillId;
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
 
-        replyContent = `For **${targetCareer.title}**, your highest-priority focus area is **${skillName}** (${topReq.importance} requirement).
-Rather than binge-watching generic tutorial videos, I recommend building a small vertical-slice project from Project Studio that proves you can apply this skill to a real problem.`;
-        followUps = ["Open Project Studio", "How is skill coverage measured?"];
-      } else if (lower.includes("exam") || lower.includes("midterm") || lower.includes("overwhelmed")) {
-        replyContent = `College exam season requires realistic breathing room, not guilt trips.
-In Aaroh, you can toggle **Exam Mode** with one tap from the sidebar or dashboard. This caps your weekly schedule at ~3 hours of light concept maintenance, deferring project milestones without breaking streaks or sending nagging alerts.`;
-        followUps = ["Toggle Exam Mode now", "View Adaptive Roadmap"];
+      const data = await response.json();
+
+      if (data.provider === "cloud_llm") {
+        setProviderStatus("Cloud LLM (Live)");
+      } else if (data.groundingNotice && data.groundingNotice.includes("timed out or unavailable")) {
+        setProviderStatus("Local Fallback (Cloud Timed Out)");
       } else {
-        replyContent = `That's a great question. As your guide, my goal is to help you turn curiosity into tangible proof of work.
-For **${targetCareer.title}**, what is one small exercise (a 1-page brief, a UI wireframe, or a 20-line script) you could complete this week to test this interest?`;
-        followUps = [
-          "Suggest a beginner project brief",
-          "What do people do daily in this role?",
-        ];
+        setProviderStatus("Grounded Local Engine (Offline)");
       }
 
       const assistantMsg: MentorMessage = {
         id: `msg-${Date.now() + 1}`,
         role: "assistant",
-        content: replyContent,
+        content: data.content || "I couldn't process that query. Please try rephrasing.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        suggestedFollowUps: followUps,
+        contextSummary: data.groundingNotice,
+        suggestedFollowUps: data.suggestedFollowUps || [
+          "Take the career micro-trial",
+          "What is my next practical milestone?",
+        ],
       };
 
-      setMessages((prev) => [...prev, assistantMsg]);
-      setIsTyping(false);
-    }, 500);
+      updateAndPersistMessages([...newMessages, assistantMsg]);
+    } catch (err: any) {
+      console.error("AI mentor query failed:", err);
+      setErrorNotice("Could not reach the intelligence service. You can retry or check your network.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
   return (
     <AppShell>
-      <div className="space-y-4 animate-fade-in max-w-3xl mx-auto">
+      <div className="space-y-4 animate-fade-in max-w-3xl mx-auto flex flex-col min-h-[calc(100vh-120px)]">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-border-subtle gap-2">
           <div>
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <Badge variant="amber">AI Guide</Badge>
+            <div className="flex items-center gap-2 mb-0.5">
+              <Badge variant="primary">AI Career Guide</Badge>
               <span className="text-xs text-text-muted">•</span>
-              <span className="text-xs text-text-muted">Target: {targetCareer.title}</span>
+              <span className="text-xs text-text-muted font-medium">
+                Active: {targetCareer.title}
+              </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black font-display text-text-primary tracking-tight">
-              Career Guide & Mentor
+              Open-Ended Career Intelligence
             </h1>
           </div>
 
-          <button
-            onClick={() => setMessages(INITIAL_MESSAGES)}
-            title="Reset conversation"
-            className="p-1.5 rounded-lg bg-surface-secondary border border-border-subtle text-text-muted hover:text-text-primary transition-colors text-xs flex items-center gap-1"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Clear Chat</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant={
+                providerStatus.includes("Live")
+                  ? "primary"
+                  : providerStatus.includes("Timed Out")
+                  ? "amber"
+                  : "mint"
+              }
+              className="text-[11px]"
+            >
+              {providerStatus}
+            </Badge>
+            <button
+              onClick={handleClearChat}
+              title="Reset conversation"
+              className="p-1.5 rounded-lg bg-surface-secondary border border-border-subtle text-text-muted hover:text-text-primary transition-colors text-xs flex items-center gap-1"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Reset Chat</span>
+            </button>
+          </div>
         </div>
 
-        {/* Optional Context Disclosure (Simple & non-intrusive) */}
-        <div className="p-3 rounded-xl bg-surface-card border border-border-subtle text-xs">
-          <button
-            onClick={() => setShowContextDisclosure(!showContextDisclosure)}
-            className="w-full flex items-center justify-between text-text-muted hover:text-text-primary transition-colors font-medium"
-          >
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-brand" />
-              <span>How advice is personalized to you</span>
-            </span>
-            {showContextDisclosure ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
+        {/* Student Context Disclosure Banner */}
+        <div className="p-3 rounded-xl bg-surface-card border border-border-subtle text-xs space-y-2 shadow-card">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-brand-primary" />
+              <span className="font-semibold text-text-primary">
+                Grounding Context for {profile.name || "Student Explorer"}
+              </span>
+            </div>
+            <button
+              onClick={() => setShowContextDetails(!showContextDetails)}
+              className="text-brand-primary font-medium hover:underline flex items-center gap-1 text-[11px]"
+            >
+              <span>{showContextDetails ? "Hide details" : "View context"}</span>
+              {showContextDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
 
-          {showContextDisclosure && (
-            <div className="pt-2 mt-2 border-t border-border-subtle/60 text-text-muted space-y-1 animate-fade-in text-[11px]">
-              <p>• Exploring: <strong className="text-text-primary">{targetCareer.title}</strong></p>
-              <p>• Background: <strong className="text-text-primary">{getDisciplineLabel(profile.discipline)}</strong></p>
-              <p>• Work Styles: <strong className="text-text-primary">{profile.selectedWorkStyles.join(", ")}</strong></p>
-              <p>• Capacity: <strong className="text-text-primary">{profile.isExamMode ? "3 hrs/wk (Exam Mode)" : `${profile.weeklyCapacityHours} hrs/wk`}</strong></p>
-              <p className="text-amber-brand pt-1">Aaroh never sends resumes, passwords, or private notes to external servers.</p>
+          {showContextDetails && (
+            <div className="pt-2 border-t border-border-subtle grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-text-muted animate-fade-in">
+              <div>
+                <span className="block font-semibold text-text-primary">Discipline:</span>
+                <span>{getDisciplineLabel(profile.discipline)}</span>
+              </div>
+              <div>
+                <span className="block font-semibold text-text-primary">Stage:</span>
+                <span>{profile.stage.replace(/_/g, " ")}</span>
+              </div>
+              <div>
+                <span className="block font-semibold text-text-primary">Weekly Capacity:</span>
+                <span>{profile.weeklyCapacityHours} hrs/wk</span>
+              </div>
+              <div>
+                <span className="block font-semibold text-text-primary">Exam Mode:</span>
+                <span className={profile.isExamMode ? "text-brand-primary font-bold" : ""}>
+                  {profile.isExamMode ? "Active (3h/wk)" : "Off"}
+                </span>
+              </div>
+              {profile.uncertainties && profile.uncertainties.length > 0 && (
+                <div className="col-span-2 sm:col-span-4 pt-1">
+                  <span className="font-semibold text-text-primary">Uncertainties: </span>
+                  <span>{profile.uncertainties.join("; ")}</span>
+                </div>
+              )}
+              {/* Privacy Notice */}
+              <div className="col-span-2 sm:col-span-4 pt-1.5 border-t border-border-subtle text-[11px] text-text-muted">
+                <span className="font-semibold text-text-primary">Data Privacy & Provider Scope: </span>
+                <span>
+                  {providerStatus.includes("Live")
+                    ? "Live Cloud LLM mode is active. Conversation text and profile context are transmitted to the configured cloud provider API for response generation."
+                    : "Operating in Grounded Local Engine mode. All processing and responses are generated locally in your browser. No profile or chat data is sent to external servers unless cloud API keys are configured."}
+                </span>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Chat Stream Window */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-surface-card border border-border-subtle space-y-4 min-h-[420px] flex flex-col justify-between shadow-card">
-          <div className="space-y-3 overflow-y-auto max-h-[460px] pr-1">
-            {messages.map((msg) => {
-              const isAssistant = msg.role === "assistant";
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex items-start gap-2.5 ${isAssistant ? "justify-start" : "justify-end"}`}
-                >
-                  {isAssistant && (
-                    <div className="w-7 h-7 rounded-lg bg-amber-brand/10 border border-amber-brand/30 flex items-center justify-center text-amber-brand shrink-0 mt-0.5">
-                      <Bot className="w-3.5 h-3.5" />
-                    </div>
-                  )}
+        {/* Chat Messages Log */}
+        <div className="flex-1 space-y-4 py-2 overflow-y-auto">
+          {messages.map((m) => {
+            const isUser = m.role === "user";
+            return (
+              <div
+                key={m.id}
+                className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"} animate-fade-in`}
+              >
+                {!isUser && (
+                  <div className="w-7 h-7 rounded-lg bg-brand-primary/10 border border-brand-primary/30 flex items-center justify-center shrink-0 mt-0.5">
+                    <Bot className="w-4 h-4 text-brand-primary" />
+                  </div>
+                )}
 
+                <div className={`max-w-[85%] sm:max-w-[78%] space-y-2`}>
                   <div
-                    className={`max-w-[85%] sm:max-w-[80%] p-3.5 rounded-2xl text-xs leading-relaxed ${
-                      isAssistant
-                        ? "bg-surface-secondary/80 border border-border-subtle text-text-primary"
-                        : "bg-amber-brand text-neutral-950 font-semibold"
+                    className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                      isUser
+                        ? "bg-brand-primary text-neutral-950 font-medium rounded-tr-sm shadow-brand-glow"
+                        : "bg-surface-card border border-border-medium text-text-primary rounded-tl-sm shadow-card"
                     }`}
                   >
-                    <p className="whitespace-pre-line">{msg.content}</p>
+                    <div className="whitespace-pre-wrap font-sans space-y-2">
+                      {m.content}
+                    </div>
 
-                    {/* Suggested follow-up prompt chips */}
-                    {isAssistant && msg.suggestedFollowUps && (
-                      <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-border-subtle/50">
-                        {msg.suggestedFollowUps.map((prompt, i) => (
-                          <button
-                            key={i}
-                            onClick={() => handleSendMessage(prompt)}
-                            className="text-[11px] px-2 py-0.5 rounded-md bg-surface-card border border-border-subtle hover:border-amber-brand text-text-muted hover:text-text-primary transition-colors flex items-center gap-1"
-                          >
-                            <Sparkles className="w-3 h-3 text-amber-brand shrink-0" />
-                            <span>{prompt}</span>
-                          </button>
-                        ))}
+                    {m.contextSummary && (
+                      <div className="mt-2.5 pt-2 border-t border-border-subtle/60 text-[10px] text-text-muted flex items-center gap-1.5">
+                        <ShieldCheck className="w-3 h-3 text-mint-brand shrink-0" />
+                        <span>{m.contextSummary}</span>
                       </div>
                     )}
+
+                    <div
+                      className={`text-[10px] mt-1.5 text-right ${
+                        isUser ? "text-neutral-950/70" : "text-text-muted"
+                      }`}
+                    >
+                      {m.timestamp}
+                    </div>
                   </div>
 
-                  {!isAssistant && (
-                    <div className="w-7 h-7 rounded-lg bg-surface-interactive flex items-center justify-center text-text-primary shrink-0 mt-0.5">
-                      <User className="w-3.5 h-3.5" />
+                  {/* Suggested Follow-Ups */}
+                  {!isUser && m.suggestedFollowUps && m.suggestedFollowUps.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {m.suggestedFollowUps.map((chip, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSendMessage(chip)}
+                          className="px-2.5 py-1 rounded-lg bg-surface-secondary border border-border-subtle hover:border-brand-primary/50 text-[11px] text-text-muted hover:text-text-primary transition-all flex items-center gap-1 group"
+                        >
+                          <Sparkles className="w-3 h-3 text-brand-primary group-hover:scale-110 transition-transform" />
+                          <span>{chip}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
-              );
-            })}
 
-            {isTyping && (
-              <div className="flex items-center gap-2 text-xs text-text-muted animate-pulse">
-                <Bot className="w-3.5 h-3.5 text-amber-brand" />
-                <span>Thinking...</span>
+                {isUser && (
+                  <div className="w-7 h-7 rounded-lg bg-surface-interactive border border-border-medium flex items-center justify-center shrink-0 mt-0.5">
+                    <User className="w-4 h-4 text-text-muted" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })}
 
-          {/* Chat Input Bar */}
-          <div className="pt-2 border-t border-border-subtle">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage();
-              }}
-              className="flex items-center gap-2"
-            >
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="Ask about careers, skill gaps, or planning..."
-                className="flex-1 px-3.5 py-2.5 rounded-xl bg-surface-secondary border border-border-medium text-text-primary placeholder:text-text-muted/60 text-xs focus:outline-none focus:border-amber-brand transition-colors"
-              />
-              <Button type="submit" variant="primary" size="sm" disabled={!inputText.trim() || isTyping}>
-                <Send className="w-3.5 h-3.5" />
+          {/* Typing Indicator */}
+          {isLoading && (
+            <div className="flex gap-3 justify-start animate-fade-in">
+              <div className="w-7 h-7 rounded-lg bg-brand-primary/10 border border-brand-primary/30 flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4 text-brand-primary" />
+              </div>
+              <div className="p-3.5 rounded-2xl bg-surface-card border border-border-medium text-xs text-text-muted flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-brand-primary animate-ping" />
+                <span>Synthesizing grounded career intelligence...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Error Notice */}
+          {errorNotice && (
+            <div className="p-3 rounded-xl bg-rose-brand/10 border border-rose-brand/30 text-rose-brand text-xs flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorNotice}</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSendMessage()}
+                className="text-xs"
+              >
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Retry
               </Button>
-            </form>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Bar */}
+        <div className="pt-2 border-t border-border-subtle bg-canvas sticky bottom-0">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }}
+            className="flex items-end gap-2 bg-surface-card border border-border-medium rounded-2xl p-2 shadow-card focus-within:border-brand-primary transition-colors"
+          >
+            <textarea
+              ref={textareaRef}
+              rows={2}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onInput={(e) => setInputText((e.target as HTMLTextAreaElement).value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask anything: switching fields, Indian CTC realities, balancing exams, day-in-the-life..."
+              className="flex-1 bg-transparent border-0 text-text-primary text-xs sm:text-sm p-2 focus:outline-none resize-none leading-relaxed"
+            />
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              disabled={!inputText.trim() || isLoading}
+              aria-label="Send career query"
+              className="shrink-0 rounded-xl font-bold"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </form>
+          <div className="flex items-center justify-between text-[11px] text-text-muted px-2 pt-1.5">
+            <span>Press Enter to send • Shift+Enter for new line</span>
+            <Link href="/trials" className="text-brand-primary hover:underline font-medium">
+              Want to test a role? Try 15-Min Micro-Trials →
+            </Link>
           </div>
         </div>
       </div>

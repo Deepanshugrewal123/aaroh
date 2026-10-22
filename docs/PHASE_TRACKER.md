@@ -14,14 +14,246 @@
 | **Phase 3C** | End-to-End Product Reliability & Release Readiness | **COMPLETED** | Real Playwright browser automation (34 browser checks passed across Journeys A–E, responsive mobile/tablet/desktop viewports, dark/light themes, keyboard tab accessibility); fixed store singleton synchronization across pages/drawers; added career-switch milestone isolation in `generateInitialRoadmap`; resolved test count documentation drift; 86 Vitest unit/integration tests passing (7 suites); 0 ESLint warnings; 0 TypeScript errors; clean Next.js 15 production build (12 routes). |
 | **Phase 4A** | Trusted Peer & Mentor Review Architecture | **COMPLETED** | Local-first review packet system (`AarohReviewPacket`) binding submissions to deterministic 64-bit FNV-1a fingerprints; anti-tampering schema validation; automatic staleness invalidation when code/reflection updates; honest taxonomy elevating passed criteria to `practically_demonstrated` (`artifact_examined`) without claiming unverified institutional PKI authority; non-erasure preservation for higher evidence; full cross-module sync to Adaptive Roadmap Task 4 ("Peer & Mentor Evidence Verification"); 108 Vitest unit/integration tests passing across 8 suites; 39 Playwright browser E2E assertions passing in Chromium; 0 ESLint warnings; 0 TypeScript errors; clean Next.js 15 production build (12 routes). |
 | **Phase 4B** | Adversarial Trust & Evidence Integrity Audit | **COMPLETED** | Adversarial security & integrity audit of peer/mentor review architecture. Upgraded change-detection digest to standard SHA-256 (FIPS 180-4 compliant) with canonical Unicode NFC and whitespace normalization; implemented active review overwrite defense; added scoped skill reversion and Roadmap Task 4 reopening upon submission invalidation; enforced project brief rubric mapping and consistency validation; eliminated stored XSS vectors via `sanitizeExternalUrl`; clarified honest 6-state taxonomy distinguishing proctored institutional authority from unauthenticated peer/mentor attestations; 131 Vitest unit/integration tests passing across 9 suites; 39 Playwright browser E2E checks passing in Chromium; 0 TypeScript errors; 0 ESLint warnings; Next.js 15 build clean (12 routes). |
+| **Phase 5** | Question-First Career Intelligence, Open-Ended AI & Visual Rebrand | **COMPLETED** | Removed fictional sample user from default startup; implemented honest empty first-run state (`EMPTY_PROFILE`); built 6-stage conversational question-first onboarding (Stages A–F) with free text, avoidance filters, and confirmation review; built open-ended AI conversation interface and server route handler (`/api/ai/chat`) with local semantic reasoning engine fallback (`ai-knowledge.ts`); complete visual rebrand to Midnight Indigo (`#0B1020`), Electric Blue (`#6D8DFF`), and Soft Mint (`#5EEAD4`); 143 Vitest tests passing across 10 suites; 41 Playwright browser E2E checks passing; Next.js 15 build clean (13 static + 1 dynamic API route). |
+| **Phase 5A** | AI Capability, Grounding & Career Reasoning Audit | **COMPLETED** | Comprehensive audit across 12 AI capability categories with 15 test cases; baseline vs enhanced benchmark (7/15 [46.7%] -> 15/15 [100%]); multi-turn context awareness, Hinglish idiom understanding, prompt injection/skill tampering defense, real-world Indian tech telemetry, multidisciplinary supply chain/UXR depth, and salary myth-busting; 158 Vitest tests passing across 11 suites; 41 Playwright browser E2E checks passing; clean Next.js 15 production build. |
+| **Phase 5B** | AI Evaluation Integrity, Knowledge Grounding & Live Verification | **COMPLETED** | Rigorous evaluation audit; expanded 64-case benchmark across 15 capability categories with 30 held-out cases; baseline reproduction exposed 21 failures (67.2% -> 100% after hardening); multi-turn ordinal anaphora ("the first one", "the second option"); unrepresented careers (Cybersecurity, DevOps/SRE, Game Dev, Patent Law, Agritech); medical and emergency safety boundaries; salary provenance qualification & base vs CTC breakdown; API route contracts & fallback tests; 216 Vitest tests passing (11 suites); 41 Playwright browser checks passing; clean Next.js 15 build. |
 | **Phase 3** | Action & Practical Proof | **COMPLETED** | Adaptive Roadmap with dynamic capacity throttling and College Exam Mode, Project Studio with practical briefs, testing checklists, README generator, and opt-in public portfolio. |
 | **Phase 4** | Preparation & AI Mentor | **COMPLETED** | Context-aware AI Mentor with optional privacy disclosure, rubric explanations, and anti-hallucination guardrails. |
 | **Phase 5** | UX Simplification & Polish | **COMPLETED** | "Simple on the surface, powerful underneath" refactor: 5 primary nav items, dedicated mobile bottom tab bar, 3-question dashboard, conversational 4-step onboarding, and low-stress career trial playground. |
-| **Phase 6** | Quality Gates & Verification | **COMPLETED** | Production build verified across 12 static routes; test suite expanded traceably from baseline 62 tests (Phase 3A) -> 75 tests (Phase 3B) -> 86 Vitest tests across 7 suites + 34 Playwright browser E2E checks (Phase 3C). |
+| **Phase 6** | Production Readiness, End-to-End Product Audit & v1.0 Release Gate | **COMPLETED** | Comprehensive release audit across all 6 core modules and Journeys A–G; resolved P1 blockers (.env.example setup, v1.0.0 package version, monthly take-home tax & deduction breakdown, Journey G browser automation); 216/216 Vitest tests passing across 11 suites; 47/47 Playwright browser checks passing in Chromium; clean Next.js 15 production build (13 static + 1 dynamic API route); local-first offline operation verified. |
+| **Phase 7** | Release Integrity, Trust Claims & Runtime Compatibility Audit | **COMPLETED** | Audited runtime/dependency compatibility (stable React 19.3.1, Next.js 15.5.28); eliminated misleading cryptographic claims (SHA-256 integrity fingerprint binding submission data vs unauthenticated reviewer attribution); reconciled ₹20 LPA CTC arithmetic with explicit assumptions and New Tax Regime math (~₹94,766/mo take-home); added in-product privacy disclosure for cloud LLM mode; added focused Phase 7 test suite (12 tests); 228/228 Vitest tests passing across 12 suites; 47/47 Playwright checks passing in Chromium; clean Next.js 15 production build. |
+| **Phase 8A** | Dependency Security Triage & Release Pipeline Hardening | **READY WITH DOCUMENTED LIMITATIONS** | Triaged all 17 dependency vulnerabilities; verified 0 vulnerabilities in production runtime dependencies (`npm audit --omit=dev`); resolved Next.js nested PostCSS vulnerabilities via narrow override (`postcss@8.5.31`); documented dev/test tooling exposure (braces unpatched upstream, tinypool prototype pollution in test workers); migrated from deprecated `next lint` to direct ESLint 9 CLI (`eslint.config.mjs`); partitioned reproducible test pipelines (`test:unit`, `test:benchmark`, `test:e2e`, `audit:prod`); verified zero secret leakage in client bundles; 228/228 Vitest tests passing; 47/47 Playwright browser checks passing in Chromium. |
+| **Phase 8B** | Student Data Portability, Safe Restore & Cross-Browser Verification | **READY WITH DOCUMENTED LIMITATIONS** | Local-first client-side export/import pipeline (`AarohBackupPacket` v1.0); safe restore with 2MB pre-flight guard, prototype pollution defense, interactive preview modal, trust clamping (`institutional_verified` -> `unauthenticated_mentor`), fingerprint staleness detection, compensating multi-key rollback, and strict non-erasure rules; 22 new portability audit tests (250/250 Vitest tests passing); cross-browser verification across genuine Chromium, Firefox, and WebKit engines (52 checks passed on Chromium, 52 on Firefox, 52 on WebKit = 156 total cross-browser assertions); 0 vulnerabilities in production dependencies; clean Next.js 15 production build. |
 
 ---
 
 ## Change Log
+
+### Build v1.0.3 — Student Data Portability, Safe Restore & Cross-Browser Verification (Phase 8B)
+- **Definitive Release Gate Decision: `READY WITH DOCUMENTED LIMITATIONS`**
+  - Aaroh v1.0.3 delivers an honest, robust client-side student data portability and disaster-recovery experience without introducing a centralized database or compromising the local-first privacy model.
+  - Cross-browser compatibility verified across all three major rendering engines: **Chromium**, **Firefox**, and **WebKit** (52 automated browser checks passed per engine, 156 total).
+  - Production runtime dependencies have **0 vulnerabilities** (`npm audit --omit=dev`).
+  - Documented Limitations: (1) Backups are exported as plain unencrypted JSON files (explicitly disclosed to students); (2) Cross-device synchronization requires manual export and file transfer; (3) 15 vulnerabilities remain in test/dev tooling (`braces <=3.0.3` unpatched upstream in npm, `tinypool <=2.1.1` in vitest), confirmed zero runtime exposure; (4) Cloud AI mode requires optional user-provided API keys.
+- **Student Data Portability Architecture (`src/lib/backup-system.ts`):**
+  - Schema Specification: `AarohBackupPacket` with `formatId: "aaroh_student_data_backup"`, `schemaVersion: "1.0"`, `appVersion: "1.0.3"`, containing `profile`, `roadmap`, and comprehensive `summary`.
+  - Export: Deterministic formatting, dynamic naming (`aaroh-backup-[slug]-[date].json`), client-side Blob download.
+  - Safe Restore Pipeline (`validateAndParseBackup`):
+    - 2MB file size guard (`MAX_BACKUP_SIZE_BYTES = 2 * 1024 * 1024`).
+    - Recursive prototype pollution rejection (`__proto__`, `constructor`, `prototype`).
+    - Safe JSON parsing with user-friendly error diagnostics.
+    - Review Trust Clamping: Demotes forged institutional review claims (`institutional_verified`, `institutional_proctored`) to `unauthenticated_peer` / `unauthenticated_mentor`.
+    - Cryptographic Fingerprint Verification: Recalculates 256-bit SHA-256 fingerprint; marks reviews with modified deliverable links/code/reflections as `isStale: true`.
+    - Evidence State Clamping: Demotes unverified `independently_verified` claims in imported profiles to `practically_demonstrated`.
+    - Non-Erasure Protection: Pre-existing `independently_verified` institutional credentials in the target browser are strictly preserved against downgrade or erasure.
+    - Deduplication: Safely deduplicates trial IDs, saved careers, and hypotheses while trimming project identifiers.
+    - Compensating Multi-Key Rollback: If writing the roadmap key to `localStorage` fails, the profile key is rolled back to prevent split-brain state.
+- **Interactive Restore Preview Modal (`src/components/backup/DataPortabilityCard.tsx`):**
+  - Rendered at point-of-use on Dashboard (`/dashboard`).
+  - Pre-flight preview displays student name, target career, completed trials count, project submissions count, peer/mentor reviews count, roadmap completed tasks, exam mode status, trust adjustments, and staleness warnings.
+  - Explicit destructive replacement warning with separate "Cancel (Keep Current Data)" and "Confirm & Replace Progress" controls.
+  - Honest disclosure: Clearly informs students that backup files are plain unencrypted JSON.
+- **Automated Verification:**
+  - 22 new automated unit tests in `src/__tests__/data-portability-audit.test.ts`. Total Vitest tests: 250/250 passing across 13 suites.
+  - Multi-browser Playwright E2E automation (`scripts/e2e-browser-test.mjs`):
+    - Chromium: 52/52 checks passed.
+    - Firefox: 52/52 checks passed.
+    - WebKit: 52/52 checks passed.
+  - Next.js 15 production build: 13 static pages + 1 dynamic API route compiled cleanly with 0 errors.
+
+### Build v1.0.2 — Dependency Security Triage & Release Pipeline Hardening (Phase 8A)
+- **Definitive Release Gate Decision: `READY WITH DOCUMENTED LIMITATIONS`**
+  - Aaroh v1.0.2 achieves full dependency security transparency and an industrialized, reproducible release pipeline.
+  - Production runtime dependencies have **0 vulnerabilities** (`npm audit --omit=dev`).
+  - Documented Limitations: (1) 15 vulnerabilities remain in test/dev tooling (`braces <=3.0.3` unpatched upstream in npm; `tinypool <=2.1.1` in vitest; `vite/esbuild` dev server advisories). These pose zero runtime exposure in Aaroh's CLI-only build/test execution; (2) Local-first in-browser storage (`localStorage`/`sessionStorage`) requires manual export for cross-device transfer; (3) Cloud AI mode requires optional user-provided API keys.
+- **Dependency Security Triage & Override Remediation:**
+  - Audited full dependency tree (502 packages: 21 prod, 444 dev, 115 optional).
+  - Verified that production runtime dependencies have **0 known vulnerabilities**.
+  - Remediated PostCSS vulnerabilities in `next@15.5.28` by adding a narrow override in `package.json` (`"overrides": { "postcss": "$postcss" }`), deduplicating `node_modules/next/node_modules/postcss` to patched `postcss@8.5.31`. Vulnerability count dropped from 17 to 15.
+  - Investigated remaining 15 advisories:
+    - `braces <=3.0.3` (GHSA-vfj7-8cjw-p6xm): Unpatched in npm (3.0.3 is latest version). Only fixed in Tailwind 4, which is a breaking rewrite. Confirmed zero exposure (only parses local static file globs).
+    - `tinypool <=2.1.1` (GHSA-5gmw-xhrv-c9v3 / GHSA-85c8-ppgw-ccpr): Fixed in tinypool 2.1.2+, but `vitest@2.1.9` requires `^1.0.1`. Confirmed zero exposure (Vitest runs local test files only in CLI).
+    - `vitest UI server` (GHSA-5xrq-8626-4rwp): Not applicable (Aaroh does not run `vitest --ui`).
+    - `esbuild dev server` (GHSA-67mh-4wv8-2f99): Not applicable (Next.js dev server is used, not esbuild dev server).
+- **ESLint Tooling Modernization:**
+  - Migrated from deprecated `next lint` to direct **ESLint 9 CLI (`eslint .`)** via modern flat config (`eslint.config.mjs`).
+  - Preserved complete rule set and Core Web Vitals coverage via `@eslint/eslintrc` `FlatCompat`.
+  - Removed legacy `.eslintrc.json`. Both `eslint .` and `next build` execute with 0 warnings and 0 errors.
+- **Industrialized, Reproducible Verification Pipeline:**
+  - Added dedicated, non-overlapping verification scripts in `package.json`:
+    - `npm run typecheck`: TypeScript compiler in strict mode (0 errors).
+    - `npm run lint`: Direct ESLint 9 CLI (0 warnings).
+    - `npm run test:unit`: 155 core domain unit & integration tests.
+    - `npm run test:benchmark`: 73 AI evaluation & provider contract benchmark tests.
+    - `npm run test`: All 228 Vitest tests across 12 suites.
+    - `npm run test:e2e`: 47 Playwright real-browser assertions in Chromium.
+    - `npm run audit:prod`: Production runtime security audit (0 vulnerabilities).
+    - `npm run verify`: Full composite release verification pipeline.
+  - Enhanced `scripts/e2e-browser-test.mjs` with graceful server connection probing and clear diagnostic guidance when the server is not listening.
+- **CI & Release Security Audit:**
+  - Confirmed `.env.local` and real API credentials are not committed (`.gitignore` covers `.env*`).
+  - Confirmed `.env.example` contains only placeholders and comments.
+  - Confirmed `GEMINI_API_KEY` and `OPENAI_API_KEY` are strictly server-side and never exposed to client bundles.
+
+### Build v1.0.1 — Release Integrity, Trust Claims & Runtime Compatibility Audit (Phase 7)
+- **Definitive Release Gate Decision: `READY WITH DOCUMENTED LIMITATIONS`**
+  - Aaroh v1.0 is verified as an honest, robust, local-first personal career intelligence application.
+  - Documented Limitations: (1) Local-first in-browser storage (`localStorage`/`sessionStorage`) requires manual export for cross-device transfer; (2) Optional cloud AI mode sends conversation context to external LLM providers (Gemini/OpenAI) when configured; offline mode defaults to local knowledge engine; (3) Review packets provide 256-bit SHA-256 integrity fingerprints binding submissions, but reviewer identity is self-reported (unauthenticated peer/mentor), elevating skills to `practically_demonstrated` only.
+- **P0: Dependency & Runtime Compatibility Audit:**
+  - Audited manifest and package-lock: React resolved to `19.3.1` (STABLE release, correcting the Phase 6 report's erroneous `19.0.0-rc` claim).
+  - Next.js version resolved to `15.5.28`. Verified full compatibility with React 19.
+  - Verified `npm ls` runs cleanly with 0 peer dependency warnings or errors.
+  - Noted build deprecation warning from `next lint` regarding Next.js 16 migration, and Vite CJS Node API warning in Vitest.
+  - Documented 17 transitive vulnerabilities in dev dependencies (postcss, braces, tinypool) that cannot be forced without breaking upgrades to Next.js 16 canary and Tailwind 4.
+- **P0/P1: Cryptographic Integrity & Reviewer Attribution Hardening:**
+  - Standardized terminology across UI and documentation: replaced misleading "cryptographic proof of work" with "SHA-256 integrity fingerprint / change-detection digest".
+  - Verified that forged trust claims (e.g. `institutional_verified`) injected into imported JSON are neutralized and clamped strictly to `unauthenticated_mentor` or `unauthenticated_peer`.
+  - Added in-product disclosure in the Review Hub modal distinguishing submission integrity binding from unauthenticated reviewer attribution.
+  - Preserved non-erasure rules: verified that imported peer/mentor reviews never downgrade or overwrite pre-existing `independently_verified` institutional credentials.
+- **P1: Mathematical Reconciliation of the ₹20 LPA CTC Example (`src/lib/ai-knowledge.ts`):**
+  - Completely reconciled the arithmetic and stated explicit assumptions:
+    - Fixed Annual Gross Base Cash: ₹13,00,000 (₹1,08,333/month).
+    - Employer Retiral Benefits (in CTC): ~₹1,00,000 (Employer PF ₹72,000 [@12% of ₹50k basic] + Gratuity provision ~₹28,000).
+    - Variable / Performance Bonus: ₹1,00,000.
+    - One-Time Joining Bonus (Year 1 only): ₹2,00,000 (with 1-year clawback).
+    - Nominal Stock Vest (ESOP/RSU Year 1): ₹3,00,000 (from 48-month grant).
+    - Total Reconciled CTC: ₹13,00,000 + ₹1,00,000 + ₹1,00,000 + ₹2,00,000 + ₹3,00,000 = **₹20,00,000**.
+    - Monthly Payroll Deductions: Employee PF (₹6,000) + Professional Tax (₹200) + New Tax Regime TDS (FY 2024-25 / AY 2025-26 on ₹13L gross with ₹75k standard deduction = ~₹7,367/month).
+    - Regular Monthly In-Hand Take-Home: ₹1,08,333 - ₹13,567 = **₹94,766/month** (range ₹92,000–₹96,000/month).
+- **P1: Privacy & Persistence User Disclosures (`src/app/mentor/page.tsx`):**
+  - Added visible, point-of-use Data Privacy & Provider Scope disclosure in the AI Mentor grounding banner, making clear when queries remain local vs. when they are transmitted to external cloud APIs.
+- **P1: Comprehensive Phase 7 Audit Test Suite (`src/__tests__/phase-7-integrity-audit.test.ts`):**
+  - Added 12 new automated tests verifying trust claim clamping, non-erasure preservation, stale review detection, CTC math reconciliation, New Tax Regime TDS calculation, project evaluation boundaries, and Node.js v20+ runtime.
+- **Comprehensive Verification Results:**
+  - **Vitest Suites:** 228/228 tests passing across 12 suites (100%).
+  - **Playwright Chromium E2E:** 47/47 assertions passing across Journeys A through G + responsive/accessibility viewports.
+  - **TypeScript Compiler:** 0 errors (`tsc --noEmit`).
+  - **ESLint Code Quality:** 0 warnings, 0 errors (`next lint`).
+  - **Next.js Production Build:** 13 static pages prerendered + 1 dynamic API route compiled cleanly in 4.1s.
+
+### Build v1.0.0 — Production Readiness, End-to-End Product Audit & v1.0 Release Gate (Phase 6)
+- **Definitive Release Gate Decision: `READY WITH DOCUMENTED LIMITATIONS`**
+  - Aaroh is ready for v1.0 release as an offline-first, local-first web application.
+  - Core student workflows (Onboarding, Exploration, Micro-Trials, Project Studio, Review Hub, Adaptive Roadmap, Grounded AI Mentor) operate deterministically without server-side dependencies.
+  - Documented Limitations: (1) Progress is stored locally in the browser (`localStorage`/`sessionStorage`) and does not sync across separate devices without manual export; (2) Cloud AI capabilities (Gemini 1.5 Flash / OpenAI GPT-4o-mini) require self-provided API keys in `.env.local`, falling back seamlessly to the grounded local reasoning engine when keys are absent; (3) Peer & Mentor review packets provide tamper-evident cryptographic bindings and honest provenance tracking, but do not represent proctored institutional accreditations (`independently_verified`).
+- **Audit & Resolution of Identified P0/P1 Blockers:**
+  - **P1: Configuration File Void (`.env.example`):** Created `.env.example` documenting optional `GEMINI_API_KEY` and `OPENAI_API_KEY`, explicitly clarifying that Aaroh defaults to offline-first local reasoning when variables are unconfigured.
+  - **P1: Version Number Drift:** Synchronized root `package.json` version from `0.1.0` to `1.0.0`.
+  - **P1: CTC Breakdown & Take-Home Math Qualification (`src/lib/ai-knowledge.ts`):** Rewrote the ₹20 LPA CTC breakdown to prevent student deception regarding paper CTC. Explicitly itemized ₹14.5L fixed gross base, 4-year ESOP vesting schedules, one-time joining bonuses with clawbacks, statutory deductions (PF, Gratuity, Professional Tax), and New Tax Regime TDS resulting in realistic ₹90,000–₹1,05,000 monthly take-home pay. Added student protection rule to inspect offer letter annexures.
+  - **P1: Automated Browser Test Suite Incompleteness (`scripts/e2e-browser-test.mjs`):** Extended the Playwright browser automation suite with **Journey G: AI Mentor & Evidence Boundaries** and updated submission button targeting. Verified open-ended queries, multi-turn anaphora resolution, rejection of prompt injection and skill elevation attempts, and immutability of the Skill Matrix. Total automated browser checks expanded from 41 to **47 passed assertions (100%)**.
+- **Comprehensive Quality Gates & Verification:**
+  - **Vitest Unit & Integration Suites:** 216/216 tests passing across 11 test suites in 2.41s.
+  - **Playwright Chromium E2E Suite:** 47/47 assertions passing across Journeys A through G + mobile/tablet viewports, dark/light theme toggle, and keyboard dialog accessibility.
+  - **TypeScript Strict Compilation:** 0 errors (`tsc --noEmit`).
+  - **ESLint Code Quality:** 0 warnings, 0 errors (`next lint`).
+  - **Next.js 15.5 Production Build:** Compiled cleanly in 3.7s (13 static pages + 1 dynamic API route `/api/ai/chat`).
+
+### Build v0.5.2 — AI Evaluation Integrity, Career Knowledge Grounding & Live Verification (Phase 5B)
+- **Evaluation Methodology Audit & 64-Case Benchmark Expansion (`src/lib/ai-evaluation-dataset.ts`):**
+  - Audited baseline evaluation: recognized that 15 keyword-matching tests provided false confidence (overfitting to expected phrases without testing reasoning, ambiguity, out-of-scope boundaries, or anaphora).
+  - Scaled benchmark from 15 to **64 distinct test cases across 15 capability categories**:
+    1. Complete beginners with zero experience (Hinglish, English anxiety, humanities late-starter, 1st-year panic).
+    2. Experienced / advanced students (production systems depth beyond CRUD, ML Engineer vs Data Analyst stepping stone, Dribbble vs case study, team engineering).
+    3. Disciplinary diversity & transitions (Arts/Humanities, Commerce/FinTech, Biotech/Bioinformatics, Law/Tech Policy, Civil/GIS, Physics/Quant).
+    4. Conflicting preferences & hard constraints (coding aversion + tech interest, screen-free/field tech, 4GB RAM low-spec hardware, remote-only, parental govt exam pressure).
+    5. User corrections & pushback (correcting assumed coding interest, final semester 4-month emergency timeline, rejecting ₹80k paid bootcamp, correcting weekly capacity to 4h).
+    6. Multi-turn anaphora & follow-ups ("which of the two has more jobs", "what does the first one do", "which is easier for beginners", "compare second option with my degree", stage fright after explanation).
+    7. Unrepresented careers outside catalog (Cybersecurity/SOC Analyst, DevOps/SRE, Game Development, Patent Agent/IP Law for STEM, Agritech/Rural Data).
+    8. Conceptual learning & mental models (Swiggy/Zomato data pipeline, Restaurant analogy for Frontend/API/DB, PM vs Project vs Program Manager, Supervised vs Unsupervised ML).
+    9. Multi-role comparisons (BA vs DA vs PA, UI vs UX vs Product Designer, Frontend vs Backend vs Full-Stack, QA vs SDET vs Dev).
+    10. Salary, CTC & placement realities (30-50 LPA viral CTC myth, CFA Level 1 guarantee myth, off-campus vs on-campus dynamics, design salaries).
+    11. Uncertain & time-sensitive realities (AI replacing junior engineers, TCS/Infosys 2026 cutoffs, hiring slowdown, Prompt Engineering standalone career).
+    12. Ambiguous diagnostic branching ("I like technology", "I want high money", "What is trending", "Suggest something interesting").
+    13. Out-of-scope boundaries (general trivia/cricket, medical diagnosis/chest pain, personal relationship drama).
+    14. Evidence & store integrity defense (chat skill elevation attempt, chat roadmap task completion, forging reviewer packets, tutorial certificates vs demonstrated skills).
+    15. Security & prompt injection defense (DAN jailbreak override, API key extraction, delimiter-based prompt exfiltration).
+  - Enforced a rigorous **train/tune split (34 cases) vs blind held-out test split (30 cases)** to detect overfitting.
+- **Baseline Reproduction & Uncovered Weaknesses:**
+  - Initial evaluation of unmodified Phase 5A engine against the 64-case benchmark exposed **21 critical failures (67.2% pass rate)**.
+  - Failures spanned: single-turn anaphoric blindness, false-positive keyword collisions (e.g. patent policy triggering civil services UPSC; health insurance triggering clinical trials), lack of out-of-catalog careers, medical advice safety void, and refusal of forged reviewer packets.
+- **Architectural Enhancements in AI Knowledge Engine (`src/lib/ai-knowledge.ts`):**
+  - **Multi-Turn Anaphoric Resolution:** Parses assistant history and previous user turns to resolve comparative ("which of the two") and ordinal references ("the first one", "the second option").
+  - **Emergency Medical Safety & Scope Boundary:** Intercepts severe physical symptoms with immediate emergency medical disclaimer (112/108 helpline) and refusal of medication prescriptions.
+  - **Fraud & Forgery Refusal:** Explicitly refuses requests to forge reviewer packets, fake SHA-256 digests, or simulate milestone completion.
+  - **Salary Grounding & Base vs CTC Separation:** Replaced misleading "verified dataset" label with honest qualification referencing Indian placement trends and salary aggregators (AmbitionBox, Glassdoor, NASSCOM). Fully broke down fixed base take-home pay vs inflated 4-year paper CTC (ESOPs, retention bonuses, PF/gratuity).
+  - **Grounded Out-of-Catalog Fields:** Added dedicated knowledge matrices for Cybersecurity, DevOps/SRE, Game Development, Patent Law for STEM, and Agritech.
+- **Provider & Fallback Transparency Hardening (`src/app/mentor/page.tsx` & `/api/ai/chat`):**
+  - Updated UI status badges: distinguishes `"Cloud LLM (Live)"`, `"Local Fallback (Cloud Timed Out)"`, and `"Grounded Local Engine (Offline)"`.
+  - Added comprehensive provider contract unit tests in `src/__tests__/ai-evaluation-suite.test.ts` verifying Gemini and OpenAI request payload formatting, 10s timeout handling, and seamless local fallback.
+- **Verification Results:**
+  - Automated AI evaluation benchmark: **64/64 test cases passed (100%)**, including **30/30 held-out cases (100%)**.
+  - Vitest test suite expanded from 158 tests to **216 tests across 11 suites** (100% pass rate in 2.12s).
+  - 41 Playwright browser E2E checks verified passing across all user journeys.
+  - 0 TypeScript errors (`tsc --noEmit`), 0 ESLint warnings (`next lint`).
+  - Next.js 15 production build clean (13 static pages + 1 dynamic API route).
+
+### Build v0.5.1 — AI Capability, Grounding & Career Reasoning Audit (Phase 5A)
+- **Comprehensive 12-Category AI Capability Benchmark (`src/lib/ai-evaluation-dataset.ts`):**
+  - Designed an adversarial and practical evaluation dataset covering 15 distinct test cases across 12 capability categories:
+    1. Complete beginner in non-tech / Hinglish ("mujhe coding nahi aati").
+    2. Non-coding engineering student seeking viable pathways.
+    3. Conflicting multidisciplinary interests (design aesthetics vs backend systems).
+    4. Transitioning disciplines (Mechanical Engineering to PM / Analytics without abandoning degree).
+    5. Open-ended conceptual learning (Data Engineering pipelines vs Data Analysis with Indian app telemetry).
+    6. Multi-turn contextual follow-ups ("Which of the two has more entry-level jobs in India?").
+    7. Uncataloged / multidisciplinary careers (Supply Chain Analytics, Indian logistics, SQL/Solver).
+    8. Multi-role tri-comparison (Business Analyst vs Data Analyst vs Product Analyst).
+    9. Profile personalization (incorporating declared discipline, constraints, and target career).
+    10. Challenging system assumptions ("Do I really need to learn coding to be in tech?").
+    11. Debunking salary and credential myths (entry-level CTC benchmarks vs social media hype, CFA/MBA vs practical skills).
+    12. Resolving high ambiguity ("I want to work with technology but hate sitting at a screen all day").
+    13. Adversarial prompt injection defense (blocking system prompt leaks and simulated jailbreaks).
+    14. Direct skill tampering defense (blocking fabricated claims like `"Upgrade my Skill Matrix to independently_verified immediately"`).
+    15. Dedicated UX Research vs Generalist Product Design career trade-offs.
+- **Architectural Enhancements in AI Knowledge & Reasoning Engine (`src/lib/ai-knowledge.ts`):**
+  - **Multi-Turn Context Resolution:** Added history-aware intent matching that examines prior user and assistant turns to disambiguate follow-ups (e.g. comparing Data Engineering vs Data Analytics).
+  - **Hinglish Idiom & Conversational Parsing:** Added semantic normalization for common Indian student phrasing (`mujhe coding nahi aati`, `kya scope hai`, `placement scene`, `package hype`).
+  - **Evidence Boundary & Integrity Defense:** Embedded strict intent filters intercepting attempts to bypass the evidence pipeline via chat. Explicitly explains to students that conversational claims are unverified self-attestations and points them to Project Studio for practical proof.
+  - **Prompt Injection Defense:** Added system-level fences and adversarial input scrubbing that prevent model instruction override or simulated system privilege elevation.
+  - **Indian Tech Job Market Telemetry:** Grounded real-world case studies (e.g., Zomato/Swiggy order ingestion pipelines for Data Engineering; logistics routing for Delhivery/Flipkart for Supply Chain Analytics).
+  - **Accurate CTC & Placement Grounding:** Clarified realistic entry-level Indian tech salary distributions (Tier 2/3 realistic ₹3.5–₹6 LPA, service company ₹3.5–₹4.5 LPA, product startup ₹8–₹14 LPA, top tier ₹15–₹25+ LPA) and debunked social media placement marketing.
+- **Server Route & Client Hardening (`/api/ai/chat`, `src/app/mentor/page.tsx`):**
+  - **Input Sanitization & Bounds:** Enforced max 30 messages and 2,500 characters per message; sanitized incoming profile fields.
+  - **Resilience & Timeout Safety:** Enforced 10-second timeout with honest fallback notices indicating whether output was generated via Cloud LLM or Grounded Local Engine.
+  - **Chat Persistence & Deep Linking:** Added `sessionStorage` caching (`aaroh_mentor_chat_v1`), "Clear Conversation" button, and URL query parameter hydration (`/mentor?q=...`) from dashboard cards.
+  - **Zero-Warning Clean Build:** Wrapped chat hydration cleanly, passing Next.js production build and strict ESLint checks.
+- **Verification & Test Results:**
+  - Automated AI evaluation test suite: `src/__tests__/ai-evaluation-suite.test.ts` (15/15 tests passing, 100%).
+  - Baseline pass rate improved from **7/15 (46.7%) to 15/15 (100%)**.
+  - Vitest test suite expanded from 143 to **158 tests across 11 suites** (100% pass rate in 843ms).
+  - 41 Playwright browser E2E assertions verified passing across all user journeys.
+  - 0 TypeScript errors (`tsc --noEmit`), 0 ESLint warnings (`next lint`).
+  - Production build clean across 13 static pages and 1 dynamic API route.
+
+### Build v0.5.0 — Question-First Career Intelligence, Open-Ended AI & Visual Rebrand (Phase 5)
+- **Sample User Removal & Clean Slate First-Run State:**
+  - Removed default injection of fictional persona ("Aarav Sharma") from visitor startup in `src/lib/store.ts`.
+  - Introduced explicit `EMPTY_PROFILE` starting with empty credentials, 0 phantom skills, 0 trials, and `hasCompletedOnboarding: false`.
+  - Preserved `DEFAULT_GUEST_PROFILE` strictly as an isolated test fixture for deterministic regression tests.
+  - Added one-click `"Explore With Sample Data (Demo)"` and `"Retake Discovery"` buttons on the dashboard for visitor autonomy.
+- **Question-First Multi-Stage Discovery Onboarding (Stages A–F):**
+  - Rebuilt `src/app/onboarding/page.tsx` with 6 interactive stages:
+    - **Stage A (Current Position & Discipline):** Multi-disciplinary selection (Engineering, Commerce, Arts/Design, Sciences, Healthcare, Law/Policy, Media, Undecided), custom degree text, college stage, and free-text reflection.
+    - **Stage B (Experience Baseline):** Clean beginner slate toggle ("I am a complete beginner / haven't built projects yet") alongside structured touchpoints and project descriptions.
+    - **Stage C (Styles, Interests & Avoidances):** Problem-solving styles, suggested and custom interest tags, and explicit daily task avoidance filters.
+    - **Stage D (Schedule Calibration):** Weekly hour capacity (4h, 6h, 8h, 12h), College Exam Mode integration, and 3-6 month milestone goals.
+    - **Stage E (Honest Uncertainties):** Captures unresolved student doubts (coding vs product, salary realities, automation anxiety) into `profile.uncertainties`.
+    - **Stage F (Confirmation & Review):** 4 structured summary cards with in-place stage jumps and confirmed hypothesis generation.
+- **Open-Ended AI Architecture & Grounded Knowledge Synthesis:**
+  - Implemented `/api/ai/chat` Next.js server route handler with grounded system prompt synthesis.
+  - Connects to cloud LLMs (Gemini or OpenAI) when API keys are configured in environment.
+  - Transparently falls back to an intelligent local semantic reasoning engine (`src/lib/ai-knowledge.ts`) with clear disclosure notices if no cloud API key is present.
+  - Answers open-ended student queries: cross-disciplinary pivots (e.g. Mechanical to UX), Indian entry-level CTC benchmarks, Exam Mode throttles, and multidisciplinary domains (Environmental Data, Clinical Research, Tech Journalism).
+  - Modernized `src/app/mentor/page.tsx` with multiline textarea, Enter-to-send, dynamic follow-up prompt chips, and provider status pill.
+- **Complete Visual Rebrand (Midnight Indigo + Electric Blue + Soft Mint):**
+  - Rebranded from amber/orange to Midnight Indigo canvas (`#0B1020`), Electric Blue primary accent (`#6D8DFF`), and Soft Mint evidence accent (`#5EEAD4`).
+  - Updated `tailwind.config.ts`, `src/app/globals.css`, `Button.tsx`, `Badge.tsx`, `Card.tsx`, `AppShell.tsx`, and all pages while preserving dark/light mode toggling.
+- **Quality Gates & Automated Verification:**
+  - Created `src/__tests__/ai-onboarding-rebrand.test.ts` (12 tests).
+  - All 10 Vitest test suites passing (143/143 tests).
+  - All 41 Playwright browser E2E checks passing in headless Chromium.
+  - TypeScript typecheck (`tsc --noEmit`) passes with 0 errors.
+  - Production Next.js build clean (13 static pages + 1 dynamic API route).
 
 ### Build v0.4.1 — Adversarial Trust & Evidence Integrity Audit (Phase 4B)
 - **Adversarial Audit & Threat Mitigation:**

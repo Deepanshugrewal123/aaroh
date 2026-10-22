@@ -25,12 +25,12 @@ import { CAREER_TRIALS } from "@/lib/trials-data";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-canvas text-text-primary selection:bg-amber-brand/20 selection:text-amber-300 flex flex-col justify-between">
+    <div className="min-h-screen bg-canvas text-text-primary selection:bg-brand-primary/25 selection:text-brand-primary flex flex-col justify-between">
       {/* Public Navigation */}
       <header className="sticky top-0 z-50 bg-canvas/90 backdrop-blur-md border-b border-border-subtle">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-brand to-amber-hover flex items-center justify-center font-bold text-neutral-950 font-display shadow-sm">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-neutral-950 font-display shadow-sm shadow-brand-glow">
               आ
             </div>
             <div className="flex flex-col">
@@ -38,7 +38,7 @@ export default function LandingPage() {
                 Aaroh
               </span>
               <span className="text-[10px] uppercase font-semibold text-text-muted tracking-wider">
-                Personal Career Intelligence
+                Career Intelligence
               </span>
             </div>
           </Link>
@@ -52,6 +52,9 @@ export default function LandingPage() {
             </Link>
             <Link href="/trials" className="hover:text-text-primary transition-colors">
               Micro-Trials
+            </Link>
+            <Link href="/mentor" className="hover:text-text-primary transition-colors">
+              AI Guide
             </Link>
             <Link href="#trust" className="hover:text-text-primary transition-colors">
               Trust & Privacy
@@ -67,7 +70,7 @@ export default function LandingPage() {
             </Link>
             <Link href="/onboarding">
               <Button variant="primary" size="sm">
-                <span>Find My Direction</span>
+                <span>Start Career Discovery</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
@@ -79,31 +82,31 @@ export default function LandingPage() {
       <section className="pt-12 pb-14 md:pt-18 md:pb-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-secondary border border-border-subtle text-xs font-medium text-text-muted">
-            <Sparkles className="w-3.5 h-3.5 text-amber-brand" />
-            <span>Student-First • Multi-Disciplinary • Evidence-Grounded</span>
+            <Sparkles className="w-3.5 h-3.5 text-brand-primary" />
+            <span>Question-First • Open-Ended AI • Evidence-Grounded</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black font-display text-text-primary tracking-tight leading-[1.15]">
             Your future isn&apos;t a guess.{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-brand to-amber-hover">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-indigo-400 to-mint-brand">
               It&apos;s a path you can build.
             </span>
           </h1>
 
           <p className="text-base sm:text-lg text-text-muted leading-relaxed max-w-2xl mx-auto">
-            Explore careers that interest you, understand what they require, and discover your next practical step.
+            Discover paths tailored to where you actually are, test day-to-day work in 12-minute micro-trials, and consult your grounded AI career guide.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link href="/onboarding" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto text-sm px-6 py-3 shadow-sm font-bold">
-                <span>Find My Direction</span>
+              <Button size="lg" className="w-full sm:w-auto text-sm px-6 py-3 font-bold shadow-brand-glow">
+                <span>Begin Career Discovery (5 mins)</span>
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </Link>
             <Link href="/explore" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-sm px-6 py-3 font-semibold">
-                <span>Explore Careers</span>
+              <Button variant="outline" size="lg" className="w-full sm:w-auto text-sm">
+                <span>Explore 7 Disciplines</span>
               </Button>
             </Link>
           </div>

@@ -276,6 +276,7 @@ export interface UserProfile {
   email?: string;
   stage: EducationStage;
   discipline: EducationalDiscipline;
+  customDisciplineText?: string;
   selectedWorkStyles: WorkStyle[];
   interests: string[];
   weeklyCapacityHours: number;
@@ -288,6 +289,13 @@ export interface UserProfile {
   projectSubmissions: Record<string, ProjectSubmissionRecord>; // projectId -> record
   projectReviews?: Record<string, ProjectReviewRecord>; // projectId -> review record
   savedCareerSlugs: string[];
+  // Question-First Discovery and Onboarding Profile Fields
+  hasCompletedOnboarding?: boolean;
+  currentSituation?: string;
+  actualExperience?: string;
+  thingsToAvoid?: string;
+  goalsAndConstraints?: string;
+  uncertainties?: string[];
   createdAt: string;
   updatedAt: string;
 }

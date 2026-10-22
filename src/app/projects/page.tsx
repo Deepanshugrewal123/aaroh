@@ -1023,7 +1023,7 @@ ${proj.testingChecklist.map((t) => `- [ ] ${t}`).join("\n")}
                   <span>Verification Boundary & Trust Disclosure</span>
                 </div>
                 <p>
-                  Peer and mentor reviews in Aaroh examine actual code repositories and live demonstrations against the brief rubric. In this local-first architecture, reviewer identities are self-reported. Verified reviews advance skills to <strong>Demonstrated (Artifact Examined)</strong> in your Skill Matrix, but cannot claim institutional PKI certification.
+                  The 256-bit SHA-256 integrity digest binds each review packet to your exact project deliverables and reflection, preventing reviews from being applied to modified code. However, in this offline client-only architecture, reviewer attribution is self-reported and unauthenticated (no cryptographic digital signatures or institutional PKI). Approved reviews advance skills to <strong>Practically Demonstrated (Artifact Examined)</strong> only, and can never claim <strong>Independently Verified</strong> status.
                 </p>
               </div>
 

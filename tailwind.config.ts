@@ -17,17 +17,32 @@ const config: Config = {
         "border-subtle": "var(--border-subtle)",
         "border-medium": "var(--border-medium)",
         "text-primary": "var(--text-primary)",
+        "text-secondary": "var(--text-secondary)",
         "text-muted": "var(--text-muted)",
+        brand: {
+          primary: "#6D8DFF",
+          hover: "#89A3FF",
+          glow: "rgba(109, 141, 255, 0.18)",
+          soft: "rgba(109, 141, 255, 0.10)",
+        },
+        mint: {
+          brand: "#5EEAD4",
+          hover: "#2DD4BF",
+          surface: "#123B3A",
+          glow: "rgba(94, 234, 212, 0.18)",
+          soft: "rgba(94, 234, 212, 0.10)",
+        },
+        // Forward compatibility / alias mapping for previous color names
         amber: {
-          brand: "#F59E0B",
-          glow: "rgba(245, 158, 11, 0.15)",
-          hover: "#D97706",
-          dark: "#B45309",
+          brand: "#6D8DFF",
+          glow: "rgba(109, 141, 255, 0.18)",
+          hover: "#89A3FF",
+          dark: "#4B6EE6",
         },
         emerald: {
-          brand: "#34D399",
-          glow: "rgba(52, 211, 153, 0.15)",
-          hover: "#10B981",
+          brand: "#5EEAD4",
+          glow: "rgba(94, 234, 212, 0.18)",
+          hover: "#2DD4BF",
         },
         rose: {
           brand: "#F43F5E",
@@ -41,8 +56,10 @@ const config: Config = {
       },
       boxShadow: {
         card: "0 4px 20px -2px rgba(0, 0, 0, 0.5)",
-        "amber-subtle": "0 0 25px -5px rgba(245, 158, 11, 0.2)",
-        "emerald-subtle": "0 0 25px -5px rgba(52, 211, 153, 0.2)",
+        "brand-glow": "0 0 25px -4px rgba(109, 141, 255, 0.25)",
+        "mint-glow": "0 0 25px -4px rgba(94, 234, 212, 0.25)",
+        "amber-subtle": "0 0 25px -5px rgba(109, 141, 255, 0.2)",
+        "emerald-subtle": "0 0 25px -5px rgba(94, 234, 212, 0.2)",
       },
       keyframes: {
         fadeIn: {

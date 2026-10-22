@@ -20,6 +20,10 @@ import {
   validateAndParseReviewPacket,
   applyReviewToProfile,
 } from "./review-system";
+import {
+  createStudentBackupSnapshot,
+  AarohBackupPacket,
+} from "./backup-system";
 
 const STORAGE_KEY_PROFILE = "aaroh_user_profile_v1";
 const STORAGE_KEY_ROADMAP = "aaroh_user_roadmap_v1";
@@ -65,6 +69,30 @@ export const DEFAULT_GUEST_PROFILE: UserProfile = {
   projectSubmissions: {},
   projectReviews: {},
   savedCareerSlugs: ["full-stack-systems-engineer", "product-ux-designer"],
+  hasCompletedOnboarding: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+};
+
+export const EMPTY_PROFILE: UserProfile = {
+  id: "student-fresh",
+  name: "",
+  stage: "first_second_year",
+  discipline: "undecided",
+  selectedWorkStyles: [],
+  interests: [],
+  weeklyCapacityHours: 6,
+  isExamMode: false,
+  targetCareerSlug: undefined,
+  targetCareerHypotheses: [],
+  skillEvidence: {},
+  completedTrialIds: [],
+  trialReflections: {},
+  projectSubmissions: {},
+  projectReviews: {},
+  savedCareerSlugs: [],
+  hasCompletedOnboarding: false,
+  uncertainties: [],
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
@@ -277,8 +305,14 @@ export function normalizeStoredProfile(storedProfile: string | null): UserProfil
       }
     });
 
+    // Check if this is the guest test fixture or an actual student profile
+    const isGuestProfile = parsed.id === DEFAULT_GUEST_PROFILE.id && parsed.name === DEFAULT_GUEST_PROFILE.name;
+    const baseProfile = isGuestProfile ? DEFAULT_GUEST_PROFILE : EMPTY_PROFILE;
+
     // Normalize skill evidence (protecting against malformed records)
-    const normalizedSkills: Record<string, UserSkillEvidence> = { ...DEFAULT_GUEST_PROFILE.skillEvidence };
+    const normalizedSkills: Record<string, UserSkillEvidence> = isGuestProfile
+      ? { ...DEFAULT_GUEST_PROFILE.skillEvidence }
+      : {};
     if (parsed.skillEvidence && typeof parsed.skillEvidence === "object") {
       Object.entries(parsed.skillEvidence).forEach(([k, ev]: [string, any]) => {
         if (ev && typeof ev === "object" && ev.skillId && ev.state) {
@@ -295,10 +329,12 @@ export function normalizeStoredProfile(storedProfile: string | null): UserProfil
     }
 
     return {
-      ...DEFAULT_GUEST_PROFILE,
+      ...baseProfile,
       ...parsed,
       skillEvidence: normalizedSkills,
-      trialReflections: { ...DEFAULT_GUEST_PROFILE.trialReflections, ...(parsed.trialReflections || {}) },
+      trialReflections: isGuestProfile
+        ? { ...DEFAULT_GUEST_PROFILE.trialReflections, ...(parsed.trialReflections || {}) }
+        : (parsed.trialReflections || {}),
       projectSubmissions: normalizedSubmissions,
       projectReviews: normalizedReviews,
     };
@@ -452,7 +488,7 @@ export function applyProjectSubmissionToProfile(
   return { updatedProfile, evaluation: evaluationWithReview };
 }
 
-let memoryProfile: UserProfile = DEFAULT_GUEST_PROFILE;
+let memoryProfile: UserProfile = EMPTY_PROFILE;
 let memoryRoadmap: Roadmap | null = null;
 let isHydrated = false;
 const storeListeners = new Set<() => void>();
@@ -470,14 +506,19 @@ function initMemoryStorage() {
     if (storedProfile) {
       memoryProfile = normalizeStoredProfile(storedProfile);
     } else {
-      localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(DEFAULT_GUEST_PROFILE));
+      memoryProfile = { ...EMPTY_PROFILE };
+      localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(EMPTY_PROFILE));
     }
 
     if (storedRoadmap) {
-      memoryRoadmap = JSON.parse(storedRoadmap);
-    } else {
+      try {
+        memoryRoadmap = JSON.parse(storedRoadmap);
+      } catch {
+        memoryRoadmap = null;
+      }
+    } else if (memoryProfile.targetCareerSlug) {
       memoryRoadmap = generateInitialRoadmap(
-        memoryProfile.targetCareerSlug || "full-stack-systems-engineer",
+        memoryProfile.targetCareerSlug,
         memoryProfile.weeklyCapacityHours,
         memoryProfile.isExamMode,
         memoryProfile.completedTrialIds || [],
@@ -485,6 +526,8 @@ function initMemoryStorage() {
         memoryProfile.projectReviews || {}
       );
       localStorage.setItem(STORAGE_KEY_ROADMAP, JSON.stringify(memoryRoadmap));
+    } else {
+      memoryRoadmap = null;
     }
   } catch (e) {
     console.warn("Storage hydration error; using in-memory state:", e);
@@ -550,11 +593,22 @@ export function useAarohStore() {
 
   const updateProfile = (updates: Partial<UserProfile>) => {
     const updated: UserProfile = {
-      ...profile,
+      ...memoryProfile,
       ...updates,
       updatedAt: new Date().toISOString(),
     };
     saveProfile(updated);
+    if (updates.targetCareerSlug) {
+      const newRoadmap = generateInitialRoadmap(
+        updates.targetCareerSlug,
+        updated.weeklyCapacityHours,
+        updated.isExamMode,
+        updated.completedTrialIds || [],
+        updated.projectSubmissions || {},
+        updated.projectReviews || {}
+      );
+      saveRoadmap(newRoadmap);
+    }
   };
 
   const toggleSaveCareer = (slug: string) => {
@@ -918,6 +972,121 @@ export function useAarohStore() {
     };
   };
 
+  const resetProfile = () => {
+    const empty: UserProfile = {
+      ...EMPTY_PROFILE,
+      id: `student-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    saveProfile(empty);
+    memoryRoadmap = null;
+    setRoadmap(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY_ROADMAP);
+    }
+  };
+
+  const loadDemoProfile = () => {
+    saveProfile({ ...DEFAULT_GUEST_PROFILE, updatedAt: new Date().toISOString() });
+    const demoRoadmap = generateInitialRoadmap(
+      DEFAULT_GUEST_PROFILE.targetCareerSlug || "full-stack-systems-engineer",
+      DEFAULT_GUEST_PROFILE.weeklyCapacityHours,
+      DEFAULT_GUEST_PROFILE.isExamMode,
+      DEFAULT_GUEST_PROFILE.completedTrialIds,
+      DEFAULT_GUEST_PROFILE.projectSubmissions,
+      DEFAULT_GUEST_PROFILE.projectReviews || {}
+    );
+    saveRoadmap(demoRoadmap);
+  };
+
+  const exportBackup = (): AarohBackupPacket => {
+    return createStudentBackupSnapshot(profile, roadmap);
+  };
+
+  const restoreBackup = (
+    validatedPacket: AarohBackupPacket
+  ): { success: boolean; message: string } => {
+    const previousProfile = memoryProfile;
+    const previousRoadmap = memoryRoadmap;
+
+    try {
+      if (typeof window !== "undefined") {
+        const profileStr = JSON.stringify(validatedPacket.profile);
+        const roadmapStr = validatedPacket.roadmap ? JSON.stringify(validatedPacket.roadmap) : null;
+
+        // 1. Write profile key to localStorage
+        localStorage.setItem(STORAGE_KEY_PROFILE, profileStr);
+
+        // 2. Write roadmap key with compensating rollback if it fails
+        if (roadmapStr) {
+          try {
+            localStorage.setItem(STORAGE_KEY_ROADMAP, roadmapStr);
+          } catch (roadmapErr) {
+            // Roll back profile key to prevent split-brain state
+            if (previousProfile) {
+              localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(previousProfile));
+            } else {
+              localStorage.removeItem(STORAGE_KEY_PROFILE);
+            }
+            throw roadmapErr;
+          }
+        } else if (validatedPacket.profile.targetCareerSlug) {
+          const generated = generateInitialRoadmap(
+            validatedPacket.profile.targetCareerSlug,
+            validatedPacket.profile.weeklyCapacityHours,
+            validatedPacket.profile.isExamMode,
+            validatedPacket.profile.completedTrialIds,
+            validatedPacket.profile.projectSubmissions,
+            validatedPacket.profile.projectReviews || {}
+          );
+          try {
+            localStorage.setItem(STORAGE_KEY_ROADMAP, JSON.stringify(generated));
+          } catch (roadmapErr) {
+            if (previousProfile) {
+              localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(previousProfile));
+            } else {
+              localStorage.removeItem(STORAGE_KEY_PROFILE);
+            }
+            throw roadmapErr;
+          }
+        } else {
+          localStorage.removeItem(STORAGE_KEY_ROADMAP);
+        }
+      }
+
+      // 3. Synchronize in-memory singleton and subscriber state
+      saveProfile(validatedPacket.profile);
+      if (validatedPacket.roadmap) {
+        saveRoadmap(validatedPacket.roadmap);
+      } else if (validatedPacket.profile.targetCareerSlug) {
+        const generated = generateInitialRoadmap(
+          validatedPacket.profile.targetCareerSlug,
+          validatedPacket.profile.weeklyCapacityHours,
+          validatedPacket.profile.isExamMode,
+          validatedPacket.profile.completedTrialIds,
+          validatedPacket.profile.projectSubmissions,
+          validatedPacket.profile.projectReviews || {}
+        );
+        saveRoadmap(generated);
+      } else {
+        memoryRoadmap = null;
+        setRoadmap(null);
+      }
+
+      return {
+        success: true,
+        message: `Successfully restored data for ${validatedPacket.profile.name || "Student"}!`,
+      };
+    } catch (err) {
+      console.error("Failed to restore backup:", err);
+      return {
+        success: false,
+        message: `Failed to restore backup: ${String(err)}`,
+      };
+    }
+  };
+
   return {
     profile,
     roadmap,
@@ -931,5 +1100,9 @@ export function useAarohStore() {
     importProjectReview,
     toggleExamMode,
     updateTaskStatus,
+    resetProfile,
+    loadDemoProfile,
+    exportBackup,
+    restoreBackup,
   };
 }

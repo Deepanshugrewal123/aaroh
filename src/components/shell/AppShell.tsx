@@ -50,7 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile Top Header */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-surface-secondary/90 backdrop-blur-md border-b border-border-subtle sticky top-0 z-30">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-brand to-amber-hover flex items-center justify-center font-bold text-neutral-950 text-sm font-display shadow-sm">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-neutral-950 text-sm font-display shadow-sm shadow-brand-glow">
             आ
           </div>
           <span className="font-display font-extrabold text-base tracking-tight text-text-primary">
@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </p>
               </div>
               <Link href="/onboarding" onClick={() => setMobileDrawerOpen(false)}>
-                <span className="text-xs text-amber-brand font-medium hover:underline">
+                <span className="text-xs text-brand-primary font-medium hover:underline">
                   Edit
                 </span>
               </Link>
@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-amber-brand text-neutral-950 font-semibold"
+                        ? "bg-brand-primary text-neutral-950 font-semibold"
                         : "text-text-muted hover:text-text-primary hover:bg-surface-interactive"
                     )}
                   >
@@ -120,7 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "px-2.5 py-1 rounded-md text-xs font-semibold border transition-colors",
                   profile.isExamMode
-                    ? "bg-amber-brand text-neutral-950 border-amber-brand"
+                    ? "bg-brand-primary text-neutral-950 border-brand-primary"
                     : "bg-surface-interactive text-text-muted border-border-subtle"
                 )}
               >
@@ -136,7 +136,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Brand Header */}
         <div className="p-4 border-b border-border-subtle flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-brand to-amber-hover flex items-center justify-center font-bold text-neutral-950 text-sm font-display shadow-sm group-hover:scale-105 transition-transform">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-primary to-brand-hover flex items-center justify-center font-bold text-neutral-950 text-sm font-display shadow-sm shadow-brand-glow group-hover:scale-105 transition-transform">
               आ
             </div>
             <div>
@@ -144,7 +144,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 Aaroh
               </span>
               <span className="text-[10px] tracking-wider uppercase text-text-muted font-medium">
-                Career Guide
+                Career Intelligence
               </span>
             </div>
           </Link>
@@ -155,13 +155,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="p-3 mx-3 my-3 rounded-xl bg-surface-card border border-border-subtle/70">
           <div className="flex items-center justify-between text-[11px] text-text-muted mb-1">
             <span>Target Path</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-brand" />
+            <span className="w-1.5 h-1.5 rounded-full bg-mint-brand shadow-mint-glow" />
           </div>
           <p className="text-xs font-bold text-text-primary truncate" title={targetCareer?.title}>
             {targetCareer?.title || "Exploring Options"}
           </p>
           <p className="text-[11px] text-text-muted truncate mt-0.5">
-            {profile.name} • {getDisciplineLabel(profile.discipline).split(" ")[0]}
+            {profile.name || "Student Explorer"} • {getDisciplineLabel(profile.discipline).split(" ")[0]}
           </p>
         </div>
 
@@ -180,14 +180,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all group",
                   isActive
-                    ? "bg-amber-brand text-neutral-950 font-bold shadow-sm"
+                    ? "bg-brand-primary text-neutral-950 font-bold shadow-sm shadow-brand-glow"
                     : "text-text-muted hover:text-text-primary hover:bg-surface-interactive/60"
                 )}
               >
                 <Icon
                   className={cn(
                     "w-4 h-4 transition-colors",
-                    isActive ? "text-neutral-950" : "text-text-muted group-hover:text-amber-brand"
+                    isActive ? "text-neutral-950" : "text-text-muted group-hover:text-brand-primary"
                   )}
                 />
                 <span>{item.title}</span>
@@ -210,7 +210,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                     isActive
-                      ? "text-amber-brand font-semibold bg-surface-interactive/70"
+                      ? "text-brand-primary font-semibold bg-surface-interactive/70"
                       : "text-text-muted hover:text-text-primary hover:bg-surface-interactive/40"
                   )}
                 >
@@ -226,14 +226,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="p-3 m-3 rounded-xl bg-surface-card border border-border-subtle">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-semibold text-text-primary flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-amber-brand" />
+              <Calendar className="w-3.5 h-3.5 text-brand-primary" />
               <span>Exam Mode</span>
             </span>
             <button
               onClick={toggleExamMode}
               className={cn(
                 "relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
-                profile.isExamMode ? "bg-amber-brand" : "bg-surface-interactive"
+                profile.isExamMode ? "bg-brand-primary" : "bg-surface-interactive"
               )}
               aria-label="Toggle exam lighter schedule mode"
             >
@@ -253,10 +253,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Footer */}
         <div className="p-3 border-t border-border-subtle text-[11px] text-text-muted flex items-center justify-between">
           <div className="flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-brand" />
+            <ShieldCheck className="w-3.5 h-3.5 text-mint-brand" />
             <span>Honest Guide</span>
           </div>
-          <Link href="/onboarding" className="hover:text-amber-brand transition-colors text-[11px]">
+          <Link href="/onboarding" className="hover:text-brand-primary transition-colors text-[11px]">
             Edit Profile
           </Link>
         </div>
@@ -281,11 +281,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors min-w-[56px]",
                 isActive
-                  ? "text-amber-brand font-bold"
+                  ? "text-brand-primary font-bold"
                   : "text-text-muted hover:text-text-primary"
               )}
             >
-              <Icon className={cn("w-5 h-5 mb-0.5", isActive ? "text-amber-brand" : "text-text-muted")} />
+              <Icon className={cn("w-5 h-5 mb-0.5", isActive ? "text-brand-primary" : "text-text-muted")} />
               <span>{item.title}</span>
             </Link>
           );
