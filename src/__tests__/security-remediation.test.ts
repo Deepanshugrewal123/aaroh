@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/ai/chat/route";
-import { checkRateLimit, resetRateLimitsForTesting } from "@/lib/rate-limiter";
+import {
+  checkRateLimit,
+  checkRateLimitAsync,
+  getRateLimiterBackendStatus,
+  resetRateLimitsForTesting,
+} from "@/lib/rate-limiter";
 import {
   createStudentBackupSnapshot,
   encryptStudentBackup,
@@ -155,6 +160,76 @@ describe("Phase 10: Complete Security Remediation & Privacy Verification", () =>
 
       const res = await POST(req);
       expect(res.status).toBe(200);
+    });
+
+    it("Direct API caller without Origin header cannot bypass rate limiting or request constraints", async () => {
+      const clientIp = "198.51.100.42";
+      // Send 20 requests without any Origin header (direct curl/server caller)
+      for (let i = 0; i < 20; i++) {
+        const req = new NextRequest("http://localhost:3000/api/ai/chat", {
+          method: "POST",
+          headers: {
+            "x-forwarded-for": clientIp,
+          },
+          body: JSON.stringify({
+            messages: [{ role: "user", content: `Direct message ${i}` }],
+            profile: EMPTY_PROFILE,
+          }),
+        });
+        const res = await POST(req);
+        expect(res.status).toBe(200);
+      }
+
+      // 21st direct request MUST be blocked with 429 Too Many Requests
+      const blockedReq = new NextRequest("http://localhost:3000/api/ai/chat", {
+        method: "POST",
+        headers: {
+          "x-forwarded-for": clientIp,
+        },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: "Direct message 21" }],
+          profile: EMPTY_PROFILE,
+        }),
+      });
+      const blockedRes = await POST(blockedReq);
+      expect(blockedRes.status).toBe(429);
+      const data = await blockedRes.json();
+      expect(data.error).toContain("Too many requests");
+    });
+
+    it("Accurately identifies unconfigured distributed rate limiting and engages local fallback", async () => {
+      delete process.env.UPSTASH_REDIS_REST_URL;
+      delete process.env.UPSTASH_REDIS_REST_TOKEN;
+      delete process.env.REDIS_URL;
+
+      const status = getRateLimiterBackendStatus();
+      expect(status.status).toBe("UNCONFIGURED_MISSING_CREDENTIALS");
+      expect(status.isDistributed).toBe(false);
+
+      const check = await checkRateLimitAsync("test-client-fallback");
+      expect(check.allowed).toBe(true);
+      expect(check.backend).toBe("in-memory-fallback");
+    });
+
+    it("Correctly operates in distributed mode when Upstash Redis credentials are present", async () => {
+      process.env.UPSTASH_REDIS_REST_URL = "https://mock-upstash.redis.io";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "mock-upstash-token";
+
+      const status = getRateLimiterBackendStatus();
+      expect(status.status).toBe("DISTRIBUTED_UPSTASH_OPERATIONAL");
+      expect(status.isDistributed).toBe(true);
+
+      // Mock Upstash REST pipeline response
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [{ result: 1 }, { result: "OK" }],
+      });
+      global.fetch = mockFetch;
+
+      const check = await checkRateLimitAsync("test-client-upstash");
+      expect(check.allowed).toBe(true);
+      expect(check.backend).toBe("upstash-redis-distributed");
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
   });
 

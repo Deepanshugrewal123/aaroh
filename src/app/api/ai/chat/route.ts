@@ -6,7 +6,7 @@ import {
   generateLocalGroundedResponse,
   AIResponsePayload,
 } from "@/lib/ai-knowledge";
-import { checkRateLimit } from "@/lib/rate-limiter";
+import { checkRateLimit, checkRateLimitAsync } from "@/lib/rate-limiter";
 
 const MAX_MESSAGES_COUNT = 30;
 const MAX_MESSAGE_LENGTH = 2500;
@@ -42,13 +42,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. In-memory IP Rate Limiting (20 requests per minute per identifier)
+    // 2. IP Rate Limiting (Distributed when Upstash Redis configured; in-memory fallback otherwise)
     const clientIp =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("x-real-ip") ||
       "anonymous-client";
 
-    const rateResult = checkRateLimit(clientIp);
+    const rateResult = await checkRateLimitAsync(clientIp);
     if (!rateResult.allowed) {
       return NextResponse.json(
         { error: "Too many requests. Please wait a moment before sending another message." },
